@@ -1,7 +1,11 @@
 # Raspberry Pi 5 Command Center - Minimal Requirements
 # Essential build tools and diagnostic tools ONLY for initial setup
 
-# Core Build Tools
+# Core Build Tools and Security
+ca-certificates
+apt-transport-https
+gnupg
+lsb-release
 git
 git-lfs
 curl

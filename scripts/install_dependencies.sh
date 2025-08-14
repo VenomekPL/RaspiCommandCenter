@@ -305,11 +305,21 @@ install_home_assistant_dependencies() {
 update_firmware() {
     log_info "Updating Raspberry Pi firmware..."
     
+    # Ensure ca-certificates is installed for secure downloads
+    if ! dpkg -l | grep -q "ca-certificates"; then
+        log_info "Installing ca-certificates for secure downloads..."
+        apt-get update
+        apt-get install -y ca-certificates
+    fi
+    
     # Update bootloader firmware
     if [[ -d "/lib/firmware/raspberrypi/bootloader" ]]; then
         log_info "Updating bootloader firmware..."
-        rpi-eeprom-update -a
-        log_success "Bootloader firmware updated"
+        if rpi-eeprom-update -a; then
+            log_success "Bootloader firmware updated"
+        else
+            log_warn "Bootloader update failed, but continuing..."
+        fi
     else
         log_warn "Bootloader firmware directory not found"
     fi
@@ -319,8 +329,11 @@ update_firmware() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "Updating kernel and firmware..."
-        rpi-update
-        log_success "Kernel and firmware updated"
+        if rpi-update; then
+            log_success "Kernel and firmware updated"
+        else
+            log_warn "Kernel/firmware update failed, but continuing..."
+        fi
     else
         log_info "Skipping kernel/firmware update"
     fi
