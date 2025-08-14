@@ -26,16 +26,16 @@ BOOT_CONFIG_FIRMWARE="/boot/firmware/config.txt"
 ###############################################################################
 
 detect_boot_config_path() {
-    log_info "Detecting boot configuration file location..."
+    log_info "Detecting boot configuration file location..." >&2
     
     if [[ -f "$BOOT_CONFIG_FIRMWARE" ]]; then
+        log_info "Using Ubuntu-style boot config: $BOOT_CONFIG_FIRMWARE" >&2
         echo "$BOOT_CONFIG_FIRMWARE"
-        log_info "Using Ubuntu-style boot config: $BOOT_CONFIG_FIRMWARE"
     elif [[ -f "$BOOT_CONFIG" ]]; then
+        log_info "Using Raspberry Pi OS boot config: $BOOT_CONFIG" >&2
         echo "$BOOT_CONFIG"
-        log_info "Using Raspberry Pi OS boot config: $BOOT_CONFIG"
     else
-        log_error "Boot configuration file not found!"
+        log_error "Boot configuration file not found!" >&2
         exit 1
     fi
 }
