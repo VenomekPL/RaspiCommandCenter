@@ -20,7 +20,7 @@ LOGS_DIR="${SCRIPT_DIR}/logs"
 
 # Configuration
 readonly PROGRAM_NAME="RaspiCommandCenter"
-readonly VERSION="2.0.0"
+readonly VERSION="1.0.1"
 readonly LOG_FILE="${LOGS_DIR}/start_$(date +%Y%m%d_%H%M%S).log"
 
 # Source utility functions

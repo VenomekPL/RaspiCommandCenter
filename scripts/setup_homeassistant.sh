@@ -20,10 +20,12 @@ LOGS_DIR="${PROJECT_DIR}/logs"
 
 # Source utility functions
 source "${UTILS_DIR}/common.sh"
-source "${UTILS_DIR}/logging.sh"
 
 readonly SCRIPT_NAME="Home Assistant Supervised Setup"
 readonly LOG_FILE="${LOGS_DIR}/homeassistant_setup_$(date +%Y%m%d_%H%M%S).log"
+
+# Source logging after LOG_FILE is defined
+source "${UTILS_DIR}/logging.sh"
 
 ###############################################################################
 # Home Assistant Installation Functions

@@ -20,28 +20,32 @@ readonly WHITE='\033[1;37m'
 readonly NC='\033[0m' # No Color
 
 # Log file variables (can be overridden by calling script)
-LOG_FILE="${LOG_FILE:-/var/log/raspi-setup.log}"
+# Only set default if LOG_FILE is not already defined
+if [ -z "${LOG_FILE:-}" ]; then
+    LOG_FILE="/var/log/raspi-setup.log"
+fi
 LOG_TO_FILE="${LOG_TO_FILE:-true}"
 LOG_TO_CONSOLE="${LOG_TO_CONSOLE:-true}"
 
 # Function to setup logging
 setup_logging() {
     local log_file="${1:-$LOG_FILE}"
-    LOG_FILE="$log_file"
+    # Use the provided log file for this function only
+    # Don't modify the global LOG_FILE variable
     
     # Create log directory if it doesn't exist
-    local log_dir="$(dirname "$LOG_FILE")"
+    local log_dir="$(dirname "$log_file")"
     if [ ! -d "$log_dir" ]; then
         sudo mkdir -p "$log_dir" 2>/dev/null || mkdir -p "$log_dir" 2>/dev/null || true
     fi
     
     # Ensure log file is writable
     if [ "$LOG_TO_FILE" = "true" ]; then
-        sudo touch "$LOG_FILE" 2>/dev/null || touch "$LOG_FILE" 2>/dev/null || true
-        sudo chmod 666 "$LOG_FILE" 2>/dev/null || chmod 666 "$LOG_FILE" 2>/dev/null || true
+        sudo touch "$log_file" 2>/dev/null || touch "$log_file" 2>/dev/null || true
+        sudo chmod 666 "$log_file" 2>/dev/null || chmod 666 "$log_file" 2>/dev/null || true
     fi
     
-    log_info "Logging setup complete. Log file: $LOG_FILE"
+    log_info "Logging setup complete. Log file: $log_file"
 }
 
 # Internal logging function
