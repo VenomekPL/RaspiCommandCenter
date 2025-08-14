@@ -110,6 +110,146 @@ wait_for_port() {
     return 1
 }
 
+###############################################################################
+# Docker Conflict Prevention Functions
+###############################################################################
+
+# Function to check if Docker is running
+docker_running() {
+    systemctl is-active --quiet docker 2>/dev/null
+}
+
+# Function to check if Docker container exists (running or stopped)
+docker_container_exists() {
+    local container_name="$1"
+    [ -n "$container_name" ] && docker ps -a --format "table {{.Names}}" | grep -q "^${container_name}$" 2>/dev/null
+}
+
+# Function to check if Docker container is running
+docker_container_running() {
+    local container_name="$1"
+    [ -n "$container_name" ] && docker ps --format "table {{.Names}}" | grep -q "^${container_name}$" 2>/dev/null
+}
+
+# Function to stop and remove Docker container if it exists
+docker_cleanup_container() {
+    local container_name="$1"
+    
+    if [ -z "$container_name" ]; then
+        log_error "Container name is required for cleanup"
+        return 1
+    fi
+    
+    if docker_container_exists "$container_name"; then
+        log_info "Found existing container: $container_name"
+        
+        if docker_container_running "$container_name"; then
+            log_info "Stopping container: $container_name"
+            docker stop "$container_name" >/dev/null 2>&1 || log_warning "Failed to stop container: $container_name"
+        fi
+        
+        log_info "Removing container: $container_name"
+        docker rm "$container_name" >/dev/null 2>&1 || log_warning "Failed to remove container: $container_name"
+        
+        log_success "Container $container_name cleaned up"
+    else
+        log_info "Container $container_name does not exist, nothing to clean up"
+    fi
+}
+
+# Function to check if port is in use and by what
+check_port_usage() {
+    local port="$1"
+    
+    if [ -z "$port" ]; then
+        log_error "Port number is required"
+        return 1
+    fi
+    
+    # Check if port is in use
+    if ss -tulpn | grep -q ":${port} "; then
+        log_warning "Port $port is already in use:"
+        ss -tulpn | grep ":${port} " | while read line; do
+            log_warning "  $line"
+        done
+        return 0  # Port is in use
+    else
+        log_info "Port $port is available"
+        return 1  # Port is free
+    fi
+}
+
+# Function to check for Home Assistant container conflicts
+check_homeassistant_conflicts() {
+    log_info "Checking for Home Assistant conflicts..."
+    
+    # Check port 8123
+    if check_port_usage 8123; then
+        log_warning "Home Assistant port 8123 is in use"
+        echo "Do you want to stop any existing Home Assistant services? (y/N)"
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            # Stop common Home Assistant containers
+            for container in homeassistant hassio_supervisor hassio_dns hassio_audio hassio_multicast; do
+                docker_cleanup_container "$container"
+            done
+            
+            # Kill any process using port 8123
+            local pid=$(ss -tulpn | grep ":8123 " | grep -o 'pid=[0-9]*' | cut -d= -f2 | head -1)
+            if [ -n "$pid" ]; then
+                log_info "Stopping process $pid using port 8123"
+                kill "$pid" 2>/dev/null || log_warning "Failed to stop process $pid"
+            fi
+        else
+            log_error "Cannot proceed with Home Assistant installation while port 8123 is in use"
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Function to check for general Docker conflicts before starting services
+check_docker_conflicts() {
+    local service_name="$1"
+    local port="$2"
+    local container_name="$3"
+    
+    log_info "Checking Docker conflicts for $service_name..."
+    
+    # Ensure Docker is running
+    if ! docker_running; then
+        log_info "Starting Docker service..."
+        systemctl start docker
+        sleep 3
+        
+        if ! docker_running; then
+            log_error "Failed to start Docker service"
+            return 1
+        fi
+    fi
+    
+    # Check for port conflicts
+    if [ -n "$port" ] && check_port_usage "$port"; then
+        log_warning "Port $port is in use, which may conflict with $service_name"
+    fi
+    
+    # Check for container name conflicts
+    if [ -n "$container_name" ] && docker_container_exists "$container_name"; then
+        log_warning "Container $container_name already exists"
+        echo "Do you want to remove the existing container? (y/N)"
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            docker_cleanup_container "$container_name"
+        else
+            log_error "Cannot proceed while container $container_name exists"
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
 # Function to get system information
 get_system_info() {
     echo "=== System Information ==="

@@ -56,12 +56,14 @@ configure_bluetooth_service() {
     log_info "Optimizing Bluetooth for gaming controllers..."
     
     # Disable ERTM (Enhanced Retransmission Mode) for Xbox controllers
+    mkdir -p /etc/modprobe.d
     cat > /etc/modprobe.d/xbox_bt.conf << 'EOF'
 # Disable ERTM for Xbox controller compatibility
 options bluetooth disable_ertm=Y
 EOF
     
     # Optimize Bluetooth power management
+    mkdir -p /etc/bluetooth/main.conf.d
     cat > /etc/bluetooth/main.conf.d/raspi-optimization.conf << 'EOF'
 [General]
 # Optimize for gaming controllers
@@ -125,6 +127,7 @@ configure_network_services() {
     log_info "System will be accessible as: ${hostname}.local"
     
     # Optimize network performance
+    mkdir -p /etc/sysctl.d
     cat > /etc/sysctl.d/99-network-performance.conf << 'EOF'
 # Network performance optimizations
 net.core.rmem_max = 16777216
@@ -180,6 +183,11 @@ configure_docker_service() {
         log_error "Docker not found! Please run install_dependencies.sh first."
         return 1
     fi
+    
+    # Check for Docker conflicts before starting
+    check_docker_conflicts "Docker" "" "" || {
+        log_warning "Docker conflicts detected but continuing with service configuration"
+    }
     
     # Enable Docker service
     systemctl enable docker

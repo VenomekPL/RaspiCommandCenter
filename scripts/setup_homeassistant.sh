@@ -307,6 +307,9 @@ main() {
     disable_wifi_randomization
     install_dependencies
     
+    # Check for conflicts before proceeding
+    check_homeassistant_conflicts || exit 1
+    
     # Reboot if AppArmor configuration was changed
     configure_apparmor
     
