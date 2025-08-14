@@ -323,18 +323,59 @@ main() {
     
     # Show completion message
     echo ""
-    echo "SETUP COMPLETE!"
-    echo "You can now run application setup scripts:"
+    echo "PHASE 1 COMPLETE!"
+    echo ""
+    echo "Available next steps:"
     echo "• ./scripts/setup_homeassistant.sh (Home Assistant Supervised)"
     echo "• ./scripts/setup_emulationstation.sh (RetroPie + Controller automation)"
     echo "• ./scripts/setup_kodi.sh (Kodi media center - optional)"
     echo "• ./scripts/phase2.sh (runs Home Assistant + EmulationStation together)"
     echo ""
-    echo "WHEN ALL INSTALLATIONS ARE COMPLETE:"
-    echo "• Manual reboot recommended: sudo reboot"
-    echo "• This activates hardware optimizations (CPU overclocking, GPU settings, etc.)"
+    echo "AUTOMATIC PHASE 2 OPTION:"
+    echo "Phase 2 installs Home Assistant + EmulationStation (takes 15-30 minutes)"
+    echo "This can be done now without rebooting first."
     echo ""
-    log_success "Phase 1 completed! Continue with application installations, then reboot manually when done."
+    read -p "Would you like to automatically continue with Phase 2? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        log_info "Starting Phase 2 automatically..."
+        echo "Running: ${SCRIPTS_DIR}/phase2.sh"
+        echo ""
+        
+        if [[ -x "${SCRIPTS_DIR}/phase2.sh" ]]; then
+            "${SCRIPTS_DIR}/phase2.sh"
+            echo ""
+            echo "=================================================================="
+            echo "  COMPLETE SETUP FINISHED!"
+            echo "=================================================================="
+            echo "Both Phase 1 and Phase 2 completed successfully!"
+            echo ""
+            echo "REBOOT RECOMMENDED:"
+            echo "Hardware optimizations require a reboot to take full effect."
+            echo ""
+            read -p "Reboot now to activate all optimizations? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                log_info "Rebooting system to activate all optimizations..."
+                reboot
+            else
+                echo "Remember to reboot manually when convenient: sudo reboot"
+            fi
+        else
+            log_error "Phase 2 script not found or not executable: ${SCRIPTS_DIR}/phase2.sh"
+        fi
+    else
+        echo ""
+        echo "MANUAL SETUP:"
+        echo "You can run Phase 2 later with: ./scripts/phase2.sh"
+        echo ""
+        echo "WHEN ALL INSTALLATIONS ARE COMPLETE:"
+        echo "• Manual reboot recommended: sudo reboot"
+        echo "• This activates hardware optimizations (CPU overclocking, GPU settings, etc.)"
+        echo ""
+        log_success "Phase 1 completed! Continue with application installations, then reboot manually when done."
+    fi
 }
 
 # Execute main function
