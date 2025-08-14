@@ -1,0 +1,70 @@
+# Raspberry Pi 5 Command Center - Minimal Requirements
+# Essential build tools and diagnostic tools ONLY for initial setup
+
+# Core Build Tools
+git
+git-lfs
+curl
+wget
+build-essential
+cmake
+pkg-config
+
+# Python Development (required for scripts)
+python3
+python3-pip
+python3-dev
+python3-venv
+
+# Essential System Utilities
+nano
+vim
+unzip
+zip
+rsync
+tree
+jq
+
+# Container Platform (essential for future components)
+docker.io
+docker-compose
+
+# System Services and Management
+avahi-daemon
+apparmor
+udisks2
+libglib2.0-bin
+network-manager
+dbus
+
+# Hardware and GPIO Tools (essential for Pi setup)
+raspi-config
+rpi-eeprom
+i2c-tools
+
+# Storage Tools (essential for NVME setup)
+parted
+gdisk
+ntfs-3g
+exfat-fuse
+dosfstools
+
+# Diagnostic and Monitoring Tools
+lm-sensors
+smartmontools
+nvme-cli
+htop
+btop
+lsof
+
+# System Information Tools
+lsb-release
+ca-certificates
+gnupg
+
+# Build Dependencies (essential for compiling)
+autoconf
+automake
+libtool
+libssl-dev
+libffi-dev

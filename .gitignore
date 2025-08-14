@@ -1,0 +1,152 @@
+# RaspiCommandCenter .gitignore
+
+# Log files and runtime data
+logs/
+*.log
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Runtime and cache files
+*.pid
+*.cache
+*.pyc
+__pycache__/
+
+# Configuration files with sensitive data
+config.local
+*.env
+.env
+secrets/
+private/
+
+# Installation artifacts
+downloads/
+temp/
+build/
+dist/
+
+# OS generated files
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Script-specific ignores
+# ROM files (too large for git)
+ROMs/
+roms/
+*.iso
+*.bin
+*.img
+*.zip
+*.7z
+*.rar
+
+# Media files (too large for git)
+Videos/
+Music/
+Pictures/
+media/
+
+# Backup files
+*.backup.*
+backup_*/
+old_*/
+
+# Test files
+test_*
+*_test.sh
+debug_*
+
+# Local development
+local/
+dev/
+sandbox/
+
+# Documentation build artifacts
+docs/build/
+docs/_build/
+*.pdf
+*.docx
+
+# Package manager files
+node_modules/
+package-lock.json
+yarn.lock
+
+# Python virtual environments
+venv/
+env/
+.venv/
+
+# Compiled binaries
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Archive files
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tgz
+
+# Docker files (if any)
+.dockerignore
+docker-compose.override.yml
+
+# Local configuration overrides
+config.local.sh
+settings.local.sh
+
+# Installation progress markers
+.phase1_complete
+.phase2_complete
+.installation_in_progress
+
+# Raspberry Pi specific
+/boot/config.txt.backup
+/etc/fstab.backup
+cmdline.txt.backup
+
+# Home directory content (if accidentally added)
+home/
+user_data/
+personal/
+
+# Large installation files
+*.deb
+*.rpm
+*.pkg
+*.dmg
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Generated documentation
+README.html
+docs/*.html
