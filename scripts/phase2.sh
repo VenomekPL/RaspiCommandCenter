@@ -37,11 +37,27 @@ main() {
         exit 0
     fi
     
-    # Check if Phase 1 was completed (reboot occurred)
-    if ! grep -q "dtparam=pciex1=on" /boot/config.txt 2>/dev/null; then
-        log_error "Phase 1 does not appear to be completed or system was not rebooted."
-        log_error "Please run ./start.sh first and reboot before running Phase 2."
-        exit 1
+    # Check if Phase 1 was completed
+    config_found=false
+    
+    # Check both possible boot config locations
+    for config_file in "/boot/firmware/config.txt" "/boot/config.txt"; do
+        if [[ -f "$config_file" ]] && grep -q "RaspiCommandCenter Configuration" "$config_file" 2>/dev/null; then
+            config_found=true
+            log_info "Phase 1 configuration detected in $config_file"
+            break
+        fi
+    done
+    
+    if [[ "$config_found" != "true" ]]; then
+        log_warning "Phase 1 configuration not detected in boot config"
+        log_warning "It's recommended to run ./start.sh first for optimal performance"
+        echo ""
+        read -p "Continue anyway? (y/N): " -r
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Installation cancelled. Run ./start.sh first for best results."
+            exit 0
+        fi
     fi
     
     echo ""
