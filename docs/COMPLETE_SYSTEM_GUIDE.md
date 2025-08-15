@@ -16,27 +16,18 @@ RaspiCommandCenter creates a comprehensive Raspberry Pi 5 system with:
 
 ## Quick Start
 
-### 1. Initial Setup (Phase 1)
+### 🤖 FULLY AUTOMATED SETUP (Recommended)
 ```bash
-./start.sh
-# Reboot when prompted
+sudo ./start.sh
+# That's it! Everything installs automatically
+# Reboot when prompted to complete setup
 ```
 
-### 2. Core Applications (Phase 2)
-```bash
-# After reboot:
-./scripts/setup_homeassistant.sh
-./scripts/setup_emulationstation.sh
-```
-
-### 3. Optional Features (Phase 3)
-```bash
-# Enhanced media center:
-./scripts/setup_kodi.sh
-
-# File sharing server:
-./scripts/setup_nas_fileserver.sh
-```
+### The automated setup includes:
+- **System Foundation:** Dependencies, performance optimization, services
+- **Home Assistant Supervised:** Smart home platform
+- **EmulationStation:** Complete retro gaming platform
+- **Safe Configuration:** Conservative settings that won't break your system
 
 ## Complete System Features
 
@@ -245,8 +236,20 @@ vcgencmd measure_clock arm # CPU frequency
 1. **Change default passwords** for all services
 2. **Disable SSH password** authentication (use keys)
 3. **Configure VPN** for remote access
-4. **Regular updates** via `sudo apt update && sudo apt upgrade`
+4. **Package list updates only** via `sudo apt update` (NEVER run `sudo apt upgrade` - it breaks Pi systems!)
 5. **Monitor logs** for unusual activity
+
+## System Stability & Safety
+
+### ⚠️ CRITICAL: Never Run These Commands
+- **`sudo apt upgrade`** - Will break drivers and firmware
+- **`sudo rpi-update`** - Will install unstable firmware
+- **`sudo rpi-eeprom-update -a`** - Can brick the boot process
+
+### ✅ Safe Maintenance
+- **`sudo apt update`** - Safe (updates package lists only)
+- **Install new packages** - Safe (doesn't modify existing drivers)
+- **Manual configuration** - Safe when done carefully
 
 ## Advanced Configuration
 

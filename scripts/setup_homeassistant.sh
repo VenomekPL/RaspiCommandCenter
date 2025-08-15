@@ -101,7 +101,7 @@ install_dependencies() {
         avahi-daemon \
         udisks2 \
         libglib2.0-bin \
-        network-manager \
+        # network-manager \  # REMOVED - causes network conflicts
         dbus \
         apparmor
     

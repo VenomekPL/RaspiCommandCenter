@@ -62,22 +62,31 @@ sudo ./start.sh
 sudo ./start.sh
 ```
 
+🤖 **FULLY AUTOMATED**: This now runs everything automatically!
 - System updates and essential packages
-- NVME SSD configuration and boot optimization
+- NVME SSD configuration and boot optimization  
 - Hardware acceleration setup (4K video support)
 - Performance tuning and cooling integration
-- **Requires reboot after completion**
-
-### Phase 2: Applications (After Reboot)
-
-```bash
-./phase2.sh
-```
-
 - Home Assistant Supervised installation
 - EmulationStation with all retro gaming emulators
-- Kodi integration as seamless "port"
-- Controller configuration and themes
+- **Automatic reboot when complete**
+
+### Manual Execution (Advanced Users)
+
+If you prefer granular control over each step:
+
+```bash
+# Phase 1: System Foundation
+sudo ./scripts/install_dependencies.sh
+sudo ./scripts/configure_performance.sh
+sudo ./scripts/configure_services.sh
+
+# Reboot required
+sudo reboot
+
+# Phase 2: Applications
+./scripts/phase2.sh
+```
 
 ## 🎮 What You Get
 

@@ -112,11 +112,11 @@ EOF
 }
 
 configure_network_services() {
-    log_info "Configuring network services..."
+    log_info "Configuring network services (SAFE - no NetworkManager changes)..."
     
-    # Enable NetworkManager
-    systemctl enable NetworkManager
-    systemctl start NetworkManager
+    # DO NOT enable NetworkManager - causes network conflicts
+    # Keep existing network configuration (dhcpcd + wpa_supplicant)
+    log_info "Preserving existing network configuration for stability"
     
     # Enable Avahi for .local domain resolution
     systemctl enable avahi-daemon
@@ -138,6 +138,23 @@ net.ipv4.tcp_congestion_control = bbr
 EOF
     
     log_success "Network services configured"
+    
+    # Test network connectivity
+    log_info "Testing network connectivity..."
+    sleep 3  # Give services time to start
+    
+    if ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        log_success "Network connectivity verified"
+    else
+        log_warn "Network connectivity test failed"
+        log_info "This may be temporary - checking again in 10 seconds..."
+        sleep 10
+        if ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+            log_success "Network connectivity restored"
+        else
+            log_error "Network connectivity still failing - manual network configuration may be needed"
+        fi
+    fi
 }
 
 configure_hardware_services() {
@@ -228,14 +245,19 @@ EOF
 configure_system_services() {
     log_info "Configuring system optimization services..."
     
-    # Disable unnecessary services for performance
+    # Disable unnecessary services for performance (with safety checks)
     local services_to_disable=(
         "bluetooth.service"  # We'll enable it only when needed
         "cups.service"       # Printing service
         "cups-browsed.service"
         "ModemManager.service"
-        "wpa_supplicant.service"  # NetworkManager handles WiFi
     )
+    
+    # NETWORK SAFETY: Don't disable wpa_supplicant automatically
+    # This prevents network connectivity loss during setup
+    # Users can manually switch to NetworkManager after verifying it works
+    log_info "Keeping wpa_supplicant enabled for network stability"
+    log_info "To switch to NetworkManager later: sudo systemctl disable wpa_supplicant && sudo systemctl enable NetworkManager"
     
     for service in "${services_to_disable[@]}"; do
         if systemctl is-enabled "$service" &>/dev/null; then
@@ -273,8 +295,7 @@ create_maintenance_scripts() {
 
 echo "Starting system cleanup..."
 
-# Clean package cache
-apt autoremove -y
+# Clean package cache (conservative)
 apt autoclean
 
 # Clean logs older than 30 days
@@ -452,21 +473,13 @@ main() {
     echo "• SSH service for remote access"
     echo "• Bluetooth for gaming controllers"
     echo "• Audio services and optimization"
-    echo "• Network services and performance"
+    echo "• Network services (safe - no changes to existing configuration)"
     echo "• Docker container platform"
     echo "• System maintenance and monitoring"
     echo ""
     
-    # Confirmation
-    read -p "Continue with services configuration? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Configuration cancelled by user"
-        exit 0
-    fi
-    
-    # Execute configuration steps
-    log_info "Starting services configuration..."
+    # No confirmation needed - controlled by start.sh
+    log_info "Starting SAFE services configuration..."
     
     configure_ssh_service
     configure_bluetooth_service

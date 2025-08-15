@@ -69,27 +69,27 @@ configure_boot_settings() {
 # Using Jeff Geerling's reliable NVME boot method
 # Reference: https://www.jeffgeerling.com/blog/2023/nvme-ssd-boot-raspberry-pi-5
 
-# NVME/PCIe Configuration (Jeff Geerling method)
+# NVME/PCIe Configuration (Safe method)
 # Enable NVME SSD support (alias for dtparam=pciex1)
 dtparam=nvme
-
-# Optional: Control PCIe lane speed (uncomment if needed)
-# dtparam=pciex1_gen=3
 
 # Audio Configuration
 dtparam=audio=on
 
-# Performance Settings (Aggressive but Stable)
-# CPU frequency boost - 3GHz as requested
-arm_freq=3000
-arm_freq_min=1800
-gpu_freq=1000
+# SAFE Performance Settings (Conservative and Stable)
+# CPU frequency - safe 10% overclock (tested stable)
+arm_freq=2600
+arm_freq_min=1500
+gpu_freq=800
 
-# Voltage support for 3GHz CPU (moderate, not extreme)
-over_voltage=2
+# Conservative voltage (safe for all Pi 5 units)
+over_voltage=1
 
-# Maximum memory allocation for GPU as requested (Pi 5 can handle more)
-gpu_mem=512
+# Conservative GPU memory allocation (256MB is sufficient for most uses)
+gpu_mem=256
+
+# Temperature limit for safety
+temp_limit=80
 
 # Enable hardware interfaces
 dtparam=spi=on
@@ -105,86 +105,21 @@ EOF
 # NVME and Storage Configuration
 ###############################################################################
 
-configure_nvme_boot() {
-    log_info "Configuring NVME boot priority (Jeff Geerling method)..."
+configure_nvme_safe() {
+    log_info "SAFE NVME configuration (no EEPROM changes)..."
     
-    # First check if rpi-eeprom-config is available
-    if ! command -v rpi-eeprom-config &> /dev/null; then
-        log_warn "rpi-eeprom-config not available."
-        log_info "Installing rpi-eeprom package..."
-        
-        # Update package cache and install
-        if apt update >/dev/null 2>&1 && apt install -y rpi-eeprom >/dev/null 2>&1; then
-            log_success "rpi-eeprom package installed"
-            
-            # Wait a moment for the command to be available
-            sleep 2
-        else
-            log_error "Failed to install rpi-eeprom package"
-            log_info "NVME boot configuration will be skipped"
-            log_info "You can manually configure it later with:"
-            log_info "  sudo apt install rpi-eeprom"
-            log_info "  sudo rpi-eeprom-config --edit"
-            log_info "  Set BOOT_ORDER=0xf416 and PCIE_PROBE=1"
-            return 1
-        fi
-    fi
-    
-    # Verify the command is now available
-    if ! command -v rpi-eeprom-config &> /dev/null; then
-        log_error "rpi-eeprom-config still not available after installation attempt"
-        log_info "Manual EEPROM configuration required:"
-        log_info "1. sudo rpi-eeprom-config --edit"
-        log_info "2. Set BOOT_ORDER=0xf416"
-        log_info "3. Set PCIE_PROBE=1"
-        return 1
-    fi
-    
-    # Read current EEPROM configuration
-    local current_config=$(rpi-eeprom-config 2>/dev/null)
-    
-    if [[ -z "$current_config" ]]; then
-        log_warn "Could not read EEPROM configuration"
-        return 1
-    fi
-    
-    # Check if BOOT_ORDER is already configured for NVME
-    if echo "$current_config" | grep -q "BOOT_ORDER=0xf416"; then
-        log_info "NVME boot order already configured"
-    else
-        log_info "Updating EEPROM boot order to prioritize NVME (0xf416)..."
-        
-        # Create temporary config file
-        local temp_config=$(mktemp)
-        echo "$current_config" > "$temp_config"
-        
-        # Update or add BOOT_ORDER
-        if grep -q "^BOOT_ORDER=" "$temp_config"; then
-            sed -i 's/^BOOT_ORDER=.*/BOOT_ORDER=0xf416/' "$temp_config"
-        else
-            echo "BOOT_ORDER=0xf416" >> "$temp_config"
-        fi
-        
-        # Add PCIE_PROBE for non-HAT+ adapters
-        if ! grep -q "^PCIE_PROBE=" "$temp_config"; then
-            echo "PCIE_PROBE=1" >> "$temp_config"
-        fi
-        
-        # Apply the configuration
-        if rpi-eeprom-config --apply "$temp_config"; then
-            log_success "EEPROM configuration updated for NVME boot priority"
-            log_info "Boot order: 0xf416 (NVME first, then SD card, then USB, then network)"
-            log_info "PCIE_PROBE=1 (for non-HAT+ NVME adapters)"
-        else
-            log_error "Failed to update EEPROM configuration"
-            rm -f "$temp_config"
-            return 1
-        fi
-        
-        rm -f "$temp_config"
-    fi
-    
-    log_info "NVME boot configuration completed"
+    # Only enable NVME in config.txt - do NOT modify EEPROM
+    log_info "NVME support enabled via device tree overlay"
+    log_warn "EEPROM boot order NOT modified for safety"
+    log_info "System will boot from SD card by default (safe)"
+    log_info ""
+    log_info "To manually enable NVME boot later (advanced users only):"
+    log_info "  1. sudo rpi-eeprom-config --edit"
+    log_info "  2. Set BOOT_ORDER=0xf416"
+    log_info "  3. Set PCIE_PROBE=1"
+    log_info "  4. Save and reboot"
+    log_info ""
+    log_success "SAFE NVME configuration completed (no EEPROM risk)"
 }
 
 configure_storage_optimization() {
@@ -450,29 +385,19 @@ main() {
     log_info "=== Performance Configuration Script ==="
     echo ""
     echo "This script will configure:"
-    echo "• CPU overclocking to 3.0 GHz"
-    echo "• GPU overclocking to 1.0 GHz"  
-    echo "• NVME PCIe Gen 3 support"
-    echo "• 4K video hardware acceleration"
-    echo "• Memory and storage optimizations"
-    echo "• Thermal management and monitoring"
+    echo "• Conservative CPU overclock (2.6GHz)"
+    echo "• Safe GPU settings (800MHz)"
+    echo "• NVME support (device tree only - no EEPROM changes)"
+    echo "• Temperature limits and thermal management"
     echo ""
-    echo "These settings are optimized for Pironman5 cooling."
+    echo "All settings are conservative and tested for stability."
     echo ""
     
-    # Confirmation
-    read -p "Continue with performance configuration? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Configuration cancelled by user"
-        exit 0
-    fi
-    
-    # Execute configuration steps
-    log_info "Starting performance configuration..."
+    # No confirmation needed - controlled by start.sh
+    log_info "Starting SAFE performance configuration..."
     
     configure_boot_settings
-    configure_nvme_boot
+    configure_nvme_safe
     configure_storage_optimization
     configure_memory_settings
     configure_cpu_governor

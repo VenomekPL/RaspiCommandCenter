@@ -20,7 +20,7 @@ LOGS_DIR="${SCRIPT_DIR}/logs"
 
 # Configuration
 readonly PROGRAM_NAME="RaspiCommandCenter"
-readonly VERSION="1.0.1"
+readonly VERSION="2.1.0-STABLE"
 readonly LOG_FILE="${LOGS_DIR}/start_$(date +%Y%m%d_%H%M%S).log"
 
 # Source utility functions
@@ -33,9 +33,19 @@ source "${UTILS_DIR}/common.sh"
 
 show_banner() {
     echo "=================================================================="
-    echo "  RaspiCommandCenter v${VERSION}"
-    echo "  Phase 1: System Preparation and Optimization"
+    echo "  RaspiCommandCenter v${VERSION} - FULLY AUTOMATED"
+    echo "  Complete Raspberry Pi 5 Entertainment Center Setup"
     echo "=================================================================="
+    echo ""
+    echo "🤖 FULL AUTOMATION: One command installs everything!"
+    echo ""
+    echo "⚠️  SAFETY FIRST - This script is designed for stability:"
+    echo "• NO dangerous apt upgrade commands"
+    echo "• NO risky firmware updates"
+    echo "• NO EEPROM modifications that can brick your device"
+    echo "• Conservative overclocking for reliability"
+    echo ""
+    echo "✅ Your system will remain stable and functional!"
     echo ""
 }
 
@@ -201,72 +211,47 @@ run_services_configuration() {
 # Completion and Next Steps
 ###############################################################################
 
-show_next_steps() {
-    echo ""
-    echo "=================================================================="
-    echo "  PHASE 1 SETUP COMPLETED SUCCESSFULLY!"
-    echo "=================================================================="
-    echo ""
-    echo "✅ System dependencies installed"
-    echo "✅ Performance optimizations configured"
-    echo "✅ Hardware settings optimized" 
-    echo "✅ System services configured"
-    echo ""
-    echo "NEXT: Install Applications (no reboot needed for software)"
-    echo "   - ./scripts/setup_homeassistant.sh (Home Assistant Supervised)"
-    echo "   - ./scripts/setup_emulationstation.sh (RetroPie + Controller automation)"
-    echo "   - ./scripts/setup_kodi.sh (Kodi media center - optional)"
-    echo "   - ./scripts/phase2.sh (runs Home Assistant + EmulationStation together)"
-    echo ""
-    echo "FINAL STEP: Manual Reboot When All Installations Complete"
-    echo "   - Command: sudo reboot"
-    echo "   - Purpose: Activates hardware optimizations (CPU, GPU, NVME, etc.)"
-    echo ""
-    echo "Log file: $LOG_FILE"
-    echo ""
-    echo "WORKFLOW: Install everything → Manual reboot at the very end! 🚀"
-    echo "=================================================================="
-}
-
 create_summary_report() {
-    local report_file="${LOGS_DIR}/phase1_summary_$(date +%Y%m%d_%H%M%S).txt"
+    local report_file="${LOGS_DIR}/complete_setup_summary_$(date +%Y%m%d_%H%M%S).txt"
     
     cat > "$report_file" << EOF
-RaspiCommandCenter Phase 1 Summary Report
-==========================================
+RaspiCommandCenter Complete Setup Summary Report
+===============================================
 Date: $(date)
 Version: ${VERSION}
 System: $(cat /proc/device-tree/model | tr -d '\0' 2>/dev/null || echo 'Unknown')
 
 COMPLETED TASKS:
-✓ System dependencies installed
-✓ Performance optimization configured
-  - CPU: 3.0 GHz overclock
-  - GPU: 1.0 GHz overclock
-  - NVME PCIe Gen 3 enabled
-  - 4K video acceleration enabled
+✓ System dependencies installed (safe - no apt upgrade)
+✓ Conservative performance optimization configured
+  - CPU: 2.6 GHz safe overclock
+  - GPU: 800 MHz stock frequency
+  - Voltage: +1 (conservative)
+  - Temperature limit: 80°C
+  - NVME support enabled (no EEPROM changes)
 ✓ System services configured
   - SSH enabled for remote access
   - Docker installed and configured
-  - Bluetooth optimized for controllers
-  - Network services configured
-
-NEXT STEPS:
-1. Reboot the system
-2. Run Phase 2 applications:
-   - Home Assistant Supervised
-   - EmulationStation + Kodi integration
+  - Network stability preserved
+✓ Home Assistant Supervised installed
+✓ EmulationStation + RetroPie gaming platform installed
 
 SYSTEM ACCESS:
 - SSH: ssh $(whoami)@$(hostname).local
 - IP: $(hostname -I | awk '{print $1}')
+- Home Assistant: http://$(hostname -I | awk '{print $1}'):8123
+
+NEXT STEPS AFTER REBOOT:
+1. Access EmulationStation (auto-starts)
+2. Configure Home Assistant via web interface
+3. Add ROM files to ~/ROMs/<system>/ directories
 
 LOGS:
 - Main log: $LOG_FILE
 - This summary: $report_file
 EOF
     
-    log_info "Summary report created: $report_file"
+    log_info "Complete setup summary created: $report_file"
 }
 
 ###############################################################################
@@ -278,7 +263,7 @@ main() {
     create_directories
     
     # Start logging
-    echo "=== RaspiCommandCenter Phase 1 Setup Log ===" > "$LOG_FILE"
+    echo "=== RaspiCommandCenter Complete Auto-Setup Log ===" > "$LOG_FILE"
     echo "Started at: $(date)" >> "$LOG_FILE"
     echo "Version: ${VERSION}" >> "$LOG_FILE"
     echo "System: $(cat /proc/device-tree/model | tr -d '\0' 2>/dev/null || echo 'Unknown')" >> "$LOG_FILE"
@@ -293,88 +278,87 @@ main() {
     # Run prerequisites check
     check_prerequisites
     
-    log_info "Starting RaspiCommandCenter Phase 1 setup..."
+    log_info "Starting AUTOMATED RaspiCommandCenter complete setup..."
     echo ""
-    echo "This will install and configure:"
+    echo "🚀 FULL AUTOMATION ENABLED - No manual steps required!"
+    echo ""
+    echo "This will automatically install and configure:"
     echo "• System dependencies and essential packages"
-    echo "• Performance optimization (3GHz CPU, 1GHz GPU)"
-    echo "• NVME SSD and PCIe configuration"
+    echo "• Conservative performance optimization (2.6GHz CPU, 800MHz GPU)"
+    echo "• NVME SSD support (device tree only - no EEPROM changes)"
     echo "• System services and Docker platform"
+    echo "• Home Assistant Supervised"
+    echo "• EmulationStation + RetroPie gaming platform"
     echo ""
     
-    # Confirmation prompt
-    read -p "Continue with Phase 1 setup? (y/N): " -n 1 -r
+    # Single confirmation prompt for everything
+    read -p "Continue with COMPLETE automated setup? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log_info "Setup cancelled by user"
         exit 0
     fi
     
-    # Execute modular setup phases
+    # Execute ALL phases automatically
+    echo ""
+    echo "=================================================================="
+    echo "  🤖 AUTOMATED INSTALLATION STARTING"
+    echo "=================================================================="
+    
+    # Phase 1: System Foundation
     run_dependencies_installation
     run_performance_configuration  
     run_services_configuration
     
-    # Create summary and show next steps
-    create_summary_report
-    show_next_steps
+    # Phase 2: Applications (auto-run without prompts)
+    log_info "=== Phase 2: Installing Applications (Automated) ==="
+    echo ""
     
-    log_success "Phase 1 setup completed successfully!"
-    
-    # Show completion message
-    echo ""
-    echo "PHASE 1 COMPLETE!"
-    echo ""
-    echo "Available next steps:"
-    echo "• ./scripts/setup_homeassistant.sh (Home Assistant Supervised)"
-    echo "• ./scripts/setup_emulationstation.sh (RetroPie + Controller automation)"
-    echo "• ./scripts/setup_kodi.sh (Kodi media center - optional)"
-    echo "• ./scripts/phase2.sh (runs Home Assistant + EmulationStation together)"
-    echo ""
-    echo "AUTOMATIC PHASE 2 OPTION:"
-    echo "Phase 2 installs Home Assistant + EmulationStation (takes 15-30 minutes)"
-    echo "This can be done now without rebooting first."
-    echo ""
-    read -p "Would you like to automatically continue with Phase 2? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo ""
-        log_info "Starting Phase 2 automatically..."
-        echo "Running: ${SCRIPTS_DIR}/phase2.sh"
-        echo ""
-        
-        if [[ -x "${SCRIPTS_DIR}/phase2.sh" ]]; then
-            "${SCRIPTS_DIR}/phase2.sh"
-            echo ""
-            echo "=================================================================="
-            echo "  COMPLETE SETUP FINISHED!"
-            echo "=================================================================="
-            echo "Both Phase 1 and Phase 2 completed successfully!"
-            echo ""
-            echo "REBOOT RECOMMENDED:"
-            echo "Hardware optimizations require a reboot to take full effect."
-            echo ""
-            read -p "Reboot now to activate all optimizations? (y/N): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                log_info "Rebooting system to activate all optimizations..."
-                reboot
-            else
-                echo "Remember to reboot manually when convenient: sudo reboot"
-            fi
+    if [[ -x "${SCRIPTS_DIR}/phase2.sh" ]]; then
+        log_info "Starting Phase 2 automatically (Home Assistant + EmulationStation)..."
+        "${SCRIPTS_DIR}/phase2.sh"
+        if [[ $? -eq 0 ]]; then
+            log_success "Phase 2 completed successfully"
         else
-            log_error "Phase 2 script not found or not executable: ${SCRIPTS_DIR}/phase2.sh"
+            log_error "Phase 2 failed"
+            exit 1
         fi
     else
+        log_error "Phase 2 script not found: ${SCRIPTS_DIR}/phase2.sh"
+        exit 1
+    fi
+    
+    # Create summary and show completion
+    create_summary_report
+    
+    echo ""
+    echo "=================================================================="
+    echo "  🎉 COMPLETE AUTOMATED SETUP FINISHED!"
+    echo "=================================================================="
+    echo "✅ Phase 1: System foundation configured"
+    echo "✅ Phase 2: Applications installed"
+    echo "✅ Home Assistant Supervised ready"
+    echo "✅ EmulationStation gaming platform ready"
+    echo ""
+    echo "🔄 FINAL STEP: System reboot required"
+    echo "Hardware optimizations need a reboot to take effect."
+    echo ""
+    
+    # Auto-reboot prompt
+    read -p "Reboot now to complete setup? (Y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        log_info "Rebooting system to activate all optimizations..."
         echo ""
-        echo "MANUAL SETUP:"
-        echo "You can run Phase 2 later with: ./scripts/phase2.sh"
+        echo "🔄 Rebooting in 5 seconds... (Ctrl+C to cancel)"
+        sleep 5
+        reboot
+    else
         echo ""
-        echo "WHEN ALL INSTALLATIONS ARE COMPLETE:"
-        echo "• Manual reboot recommended: sudo reboot"
-        echo "• This activates hardware optimizations (CPU overclocking, GPU settings, etc.)"
+        echo "⚠️  MANUAL REBOOT REQUIRED:"
+        echo "Run 'sudo reboot' when ready to activate all optimizations"
         echo ""
-        log_success "Phase 1 completed! Continue with application installations, then reboot manually when done."
+        log_success "Complete setup finished! Reboot manually when convenient."
     fi
 }
 

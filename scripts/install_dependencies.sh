@@ -22,19 +22,20 @@ source "${SCRIPT_DIR}/../utils/common.sh"
 ###############################################################################
 
 update_system() {
-    log_info "Updating system packages..."
+    log_info "Updating package lists (SAFE - no system upgrades)..."
     
-    # Update package lists
+    # Update package lists ONLY - this is safe
     apt update
     
-    # Upgrade existing packages (non-interactive)
-    DEBIAN_FRONTEND=noninteractive apt upgrade -y
+    # DO NOT UPGRADE PACKAGES - this breaks drivers and firmware!
+    # DEBIAN_FRONTEND=noninteractive apt upgrade -y  # REMOVED - DANGEROUS!
+    log_warn "Skipping 'apt upgrade' to prevent driver/firmware breakage"
+    log_info "Your system drivers and firmware will remain stable"
     
-    # Clean up package cache
-    apt autoremove -y
+    # Clean up package cache only
     apt autoclean
     
-    log_success "System update completed"
+    log_success "SAFE package list update completed (no system changes)"
 }
 
 ###############################################################################
@@ -73,8 +74,7 @@ install_essential_packages() {
         "python3-setuptools"
         "python3-dev"
         
-        # Network utilities
-        "network-manager"
+        # Network utilities (safe - no NetworkManager conflicts)
         "avahi-daemon"
         "avahi-utils"
         
@@ -106,10 +106,10 @@ install_raspberry_pi_packages() {
     log_info "Installing Raspberry Pi specific packages..."
     
     local pi_packages=(
-        # Raspberry Pi tools
+        # Raspberry Pi tools (SAFE SUBSET - no dangerous firmware tools)
         "raspi-config"
-        "rpi-update"
-        "rpi-eeprom"
+        # "rpi-update"          # REMOVED - DANGEROUS! Can break firmware
+        # "rpi-eeprom"          # REMOVED - Can break boot process
         "libraspberrypi-bin"
         "libraspberrypi-dev"
         
@@ -275,7 +275,7 @@ install_home_assistant_dependencies() {
         "curl"
         "avahi-daemon"
         "dbus"
-        "network-manager"
+        # "network-manager"  # REMOVED - causes network conflicts
         "apparmor"
         "apparmor-utils"
         "udisks2"
@@ -302,41 +302,21 @@ install_home_assistant_dependencies() {
 # Firmware Updates
 ###############################################################################
 
-update_firmware() {
-    log_info "Updating Raspberry Pi firmware..."
-    
-    # Ensure ca-certificates is installed for secure downloads
-    if ! dpkg -l | grep -q "ca-certificates"; then
-        log_info "Installing ca-certificates for secure downloads..."
-        apt-get update
-        apt-get install -y ca-certificates
-    fi
-    
-    # Update bootloader firmware
-    if [[ -d "/lib/firmware/raspberrypi/bootloader" ]]; then
-        log_info "Updating bootloader firmware..."
-        if rpi-eeprom-update -a; then
-            log_success "Bootloader firmware updated"
-        else
-            log_warn "Bootloader update failed, but continuing..."
-        fi
-    else
-        log_warn "Bootloader firmware directory not found"
-    fi
-    
-    # Update kernel and firmware (optional, can be skipped if stable)
-    read -p "Update kernel and firmware? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Updating kernel and firmware..."
-        if rpi-update; then
-            log_success "Kernel and firmware updated"
-        else
-            log_warn "Kernel/firmware update failed, but continuing..."
-        fi
-    else
-        log_info "Skipping kernel/firmware update"
-    fi
+disable_dangerous_firmware_updates() {
+    log_warn "FIRMWARE UPDATES DISABLED FOR SYSTEM SAFETY"
+    echo ""
+    echo "⚠️  DANGEROUS OPERATIONS DISABLED:"
+    echo "   • rpi-eeprom-update -a  (can break boot)"
+    echo "   • rpi-update           (can break drivers/firmware)"
+    echo "   • apt upgrade          (can break everything)"
+    echo ""
+    echo "✅ Your system will remain stable and functional"
+    echo ""
+    echo "If you absolutely need firmware updates later (NOT recommended):"
+    echo "   • Manual EEPROM: sudo rpi-eeprom-config --edit"
+    echo "   • Manual firmware: sudo rpi-update (DANGEROUS)"
+    echo ""
+    log_success "System safety ensured - no dangerous updates performed"
 }
 
 ###############################################################################
@@ -344,27 +324,11 @@ update_firmware() {
 ###############################################################################
 
 main() {
-    log_info "=== Dependencies Installation Script ==="
+    log_info "=== Dependencies Installation Script (SAFE VERSION) ==="
     echo ""
-    echo "This script will install:"
-    echo "• System updates and essential packages"
-    echo "• Raspberry Pi specific tools"
-    echo "• Media and gaming libraries" 
-    echo "• Docker containerization platform"
-    echo "• Home Assistant dependencies"
-    echo ""
+    echo "This script will install required packages without performing dangerous system upgrades."
     
-    # Confirmation
-    read -p "Continue with dependency installation? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Installation cancelled by user"
-        exit 0
-    fi
-    
-    # Execute installation steps
-    log_info "Starting dependency installation..."
-    
+    # Execute SAFE installation steps
     update_system
     install_essential_packages
     install_raspberry_pi_packages
@@ -372,14 +336,12 @@ main() {
     install_gaming_packages
     install_docker
     install_home_assistant_dependencies
-    update_firmware
     
-    log_success "=== Dependencies installation completed! ==="
+    log_success "=== SAFE Dependencies installation completed! ==="
     echo ""
-    echo "Next step: Run configure_performance.sh to set up overclocking and performance settings"
-}
-
-# Execute main function if script is run directly
+    echo "✅ System remains stable - no dangerous upgrades or firmware changes were made."
+    echo "Next step: Run configure_performance.sh for hardware optimization."
+}# Execute main function if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi

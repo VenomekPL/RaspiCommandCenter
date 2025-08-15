@@ -23,19 +23,14 @@ main() {
     
     log_info "Starting Phase 2 setup..."
     echo ""
-    echo "This will install:"
+    echo "This will automatically install:"
     echo "1. Home Assistant Supervised (containerized smart home platform)"
     echo "2. EmulationStation with all major retro gaming emulators"
-    echo "3. Kodi integrated as a port within EmulationStation"
-    echo "4. Seamless switching between Kodi and EmulationStation"
+    echo "3. Complete gaming and smart home setup"
     echo ""
     
-    read -p "Continue with Phase 2 installation? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Installation cancelled by user"
-        exit 0
-    fi
+    # No confirmation needed - controlled by start.sh
+    log_info "Starting Phase 2 automated installation..."
     
     # Check if Phase 1 was completed
     config_found=false
@@ -53,11 +48,8 @@ main() {
         log_warning "Phase 1 configuration not detected in boot config"
         log_warning "It's recommended to run ./start.sh first for optimal performance"
         echo ""
-        read -p "Continue anyway? (y/N): " -r
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Installation cancelled. Run ./start.sh first for best results."
-            exit 0
-        fi
+        log_warn "Phase 1 configuration not detected, but continuing with Phase 2..."
+        log_info "Some optimizations may not be active until manual reboot"
     fi
     
     echo ""
