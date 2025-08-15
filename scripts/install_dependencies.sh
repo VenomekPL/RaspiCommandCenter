@@ -274,8 +274,6 @@ install_home_assistant_dependencies() {
         "wget"
         "curl"
         "avahi-daemon"
-        "dbus-user-session"
-        "systemd-container"
         # "network-manager"  # REMOVED - causes network conflicts
         "apparmor"
         "apparmor-utils"
@@ -295,13 +293,6 @@ install_home_assistant_dependencies() {
             log_warn "✗ Failed to install: $package (continuing...)"
         fi
     done
-    
-    # Ensure dbus service is properly configured
-    log_info "Configuring dbus service for Home Assistant..."
-    systemctl enable dbus
-    if ! systemctl is-active --quiet dbus; then
-        systemctl start dbus
-    fi
     
     log_success "Home Assistant dependencies installation completed"
 }
