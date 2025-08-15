@@ -118,7 +118,7 @@ fi
 ###############################################################################
 
 validate_services() {
-    log_info "Validating service configuration..."
+    echo "Validating service configuration..."
     
     echo ""
     echo "=== Service Configuration Summary ==="
@@ -149,7 +149,7 @@ validate_services() {
     echo "SSH Access: ssh $(whoami)@$(hostname).local"
     
     echo ""
-    log_success "Service validation completed"
+    echo "Service validation completed"
 }
 
 ###############################################################################
@@ -157,7 +157,7 @@ validate_services() {
 ###############################################################################
 
 main() {
-    log_info "=== Services Configuration Script ==="
+    echo "=== Services Configuration Script ==="
     echo ""
     echo "This script will configure:"
     echo "• SSH service for remote access"
@@ -169,7 +169,7 @@ main() {
     echo ""
     
     # No confirmation needed - controlled by start.sh
-    log_info "Starting SAFE services configuration..."
+    echo "Starting SAFE services configuration..."
     
     configure_ssh_service
     configure_bluetooth_service
@@ -184,7 +184,7 @@ main() {
     # Validation and summary
     validate_services
     
-    log_success "=== Services configuration completed! ==="
+    echo "=== Services configuration completed! ==="
     echo ""
     echo "All system services have been configured and optimized."
     echo "The system is ready for application installation."
