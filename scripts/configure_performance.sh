@@ -110,7 +110,33 @@ configure_nvme_boot() {
     
     # First check if rpi-eeprom-config is available
     if ! command -v rpi-eeprom-config &> /dev/null; then
-        log_warn "rpi-eeprom-config not available. Install rpi-eeprom package first."
+        log_warn "rpi-eeprom-config not available."
+        log_info "Installing rpi-eeprom package..."
+        
+        # Update package cache and install
+        if apt update >/dev/null 2>&1 && apt install -y rpi-eeprom >/dev/null 2>&1; then
+            log_success "rpi-eeprom package installed"
+            
+            # Wait a moment for the command to be available
+            sleep 2
+        else
+            log_error "Failed to install rpi-eeprom package"
+            log_info "NVME boot configuration will be skipped"
+            log_info "You can manually configure it later with:"
+            log_info "  sudo apt install rpi-eeprom"
+            log_info "  sudo rpi-eeprom-config --edit"
+            log_info "  Set BOOT_ORDER=0xf416 and PCIE_PROBE=1"
+            return 1
+        fi
+    fi
+    
+    # Verify the command is now available
+    if ! command -v rpi-eeprom-config &> /dev/null; then
+        log_error "rpi-eeprom-config still not available after installation attempt"
+        log_info "Manual EEPROM configuration required:"
+        log_info "1. sudo rpi-eeprom-config --edit"
+        log_info "2. Set BOOT_ORDER=0xf416"
+        log_info "3. Set PCIE_PROBE=1"
         return 1
     fi
     
