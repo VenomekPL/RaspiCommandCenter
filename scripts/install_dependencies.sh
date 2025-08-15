@@ -341,7 +341,9 @@ main() {
     echo ""
     echo "✅ System remains stable - no dangerous upgrades or firmware changes were made."
     echo "Next step: Run configure_performance.sh for hardware optimization."
-}# Execute main function if script is run directly
+}
+
+# Execute main function if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
