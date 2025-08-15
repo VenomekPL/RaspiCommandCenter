@@ -1,72 +1,33 @@
 #!/bin/bash
 
-###############################################################################
-# Services Configuration Script
-# 
-# This script handles system services, network, and final system setup
-# Part of the modular RaspiCommandCenter setup
-#
-# Author: RaspiCommandCenter
-# Version: 1.0.0
-###############################################################################
-
 set -euo pipefail
 
 # Source utility functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../utils/logging.sh"
 source "${SCRIPT_DIR}/../utils/common.sh"
 
-###############################################################################
-# System Services Configuration
-###############################################################################
-
 configure_ssh_service() {
-    log_info "Configuring SSH service..."
-    
-    # Enable SSH service
+    echo "Configuring SSH service..."
     systemctl enable ssh
     systemctl start ssh
-    
-    # Configure SSH for better security (optional hardening)
-    local ssh_config="/etc/ssh/sshd_config"
-    if [[ -f "$ssh_config" ]]; then
-        # Backup original config
-        cp "$ssh_config" "${ssh_config}.backup-$(date +%Y%m%d)"
-        
-        # Basic SSH hardening (commented out by default for compatibility)
-        # Uncomment these if you want enhanced security
-        # sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' "$ssh_config"
-        # sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' "$ssh_config"
-        
-        log_info "SSH configuration reviewed (hardening options available)"
-    fi
-    
-    log_success "SSH service configured and enabled"
+    echo "✓ SSH enabled"
 }
 
 configure_bluetooth_service() {
-    log_info "Configuring Bluetooth service..."
+    echo "Configuring Bluetooth for controllers..."
     
-    # Enable Bluetooth services
     systemctl enable bluetooth
     systemctl start bluetooth
     
-    # Configure Bluetooth for gaming controllers
-    log_info "Optimizing Bluetooth for gaming controllers..."
-    
-    # Disable ERTM (Enhanced Retransmission Mode) for Xbox controllers
+    # Optimize Bluetooth for gaming controllers
     mkdir -p /etc/modprobe.d
     cat > /etc/modprobe.d/xbox_bt.conf << 'EOF'
-# Disable ERTM for Xbox controller compatibility
 options bluetooth disable_ertm=Y
 EOF
     
-    # Optimize Bluetooth power management
     mkdir -p /etc/bluetooth/main.conf.d
     cat > /etc/bluetooth/main.conf.d/raspi-optimization.conf << 'EOF'
 [General]
-# Optimize for gaming controllers
 Class=0x000100
 DiscoverableTimeout=0
 PairableTimeout=0
@@ -75,21 +36,17 @@ PairableTimeout=0
 AutoEnable=true
 EOF
     
-    log_success "Bluetooth service configured for gaming controllers"
+    echo "✓ Bluetooth optimized for controllers"
 }
 
 configure_audio_services() {
-    log_info "Configuring audio services..."
+    echo "Configuring audio services..."
     
-    # Ensure audio group exists and add users
     if [[ -n "${SUDO_USER:-}" ]]; then
         usermod -a -G audio "$SUDO_USER"
-        log_info "Added $SUDO_USER to audio group"
     fi
     
-    # Configure ALSA for optimal audio
     cat > /etc/asound.conf << 'EOF'
-# RaspiCommandCenter Audio Configuration
 pcm.!default {
     type hw
     card 0
@@ -98,6 +55,67 @@ pcm.!default {
 
 ctl.!default {
     type hw
+    card 0
+}
+EOF
+    
+    echo "✓ Audio configured"
+}
+
+configure_console_boot() {
+    echo "Configuring console boot (no desktop)..."
+    
+    # Set boot to console mode instead of desktop
+    systemctl set-default multi-user.target
+    
+    echo "✓ Console boot configured"
+}
+
+configure_emulationstation_autostart() {
+    echo "Configuring EmulationStation autostart..."
+    
+    USER_HOME="/home/${SUDO_USER:-$USER}"
+    
+    # Create .profile for user to autostart EmulationStation
+    cat > "$USER_HOME/.profile" << 'EOF'
+# ~/.profile: executed by the command interpreter for login shells.
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
+fi
+
+# Auto-start EmulationStation on console login (tty1 only)
+if [ "$(tty)" = "/dev/tty1" ] && [ -z "$SSH_CONNECTION" ]; then
+    if command -v emulationstation >/dev/null 2>&1; then
+        emulationstation
+    fi
+fi
+EOF
+    
+    chown "${SUDO_USER:-$USER}:${SUDO_USER:-$USER}" "$USER_HOME/.profile"
+    
+    echo "✓ EmulationStation autostart configured"
+}
+
+main() {
+    echo "=== Configuring Services ==="
+    
+    configure_ssh_service
+    configure_bluetooth_service
+    configure_audio_services
+    configure_console_boot
+    configure_emulationstation_autostart
+    
+    echo "=== Services configuration completed ==="
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
     card 0
 }
 EOF
@@ -242,48 +260,6 @@ EOF
 # System Optimization Services
 ###############################################################################
 
-configure_system_services() {
-    log_info "Configuring system optimization services..."
-    
-    # Disable unnecessary services for performance (with safety checks)
-    local services_to_disable=(
-        "bluetooth.service"  # We'll enable it only when needed
-        "cups.service"       # Printing service
-        "cups-browsed.service"
-        "ModemManager.service"
-    )
-    
-    # NETWORK SAFETY: Don't disable wpa_supplicant automatically
-    # This prevents network connectivity loss during setup
-    # Users can manually switch to NetworkManager after verifying it works
-    log_info "Keeping wpa_supplicant enabled for network stability"
-    log_info "To switch to NetworkManager later: sudo systemctl disable wpa_supplicant && sudo systemctl enable NetworkManager"
-    
-    for service in "${services_to_disable[@]}"; do
-        if systemctl is-enabled "$service" &>/dev/null; then
-            systemctl disable "$service" &>/dev/null || true
-            log_info "Disabled unnecessary service: $service"
-        fi
-    done
-    
-    # Enable important services
-    local services_to_enable=(
-        "systemd-timesyncd.service"  # Time synchronization
-        "systemd-resolved.service"   # DNS resolution
-        "rsyslog.service"           # System logging
-        "cron.service"              # Task scheduling
-    )
-    
-    for service in "${services_to_enable[@]}"; do
-        if systemctl list-unit-files | grep -q "$service"; then
-            systemctl enable "$service" &>/dev/null || true
-            systemctl start "$service" &>/dev/null || true
-            log_info "Enabled service: $service"
-        fi
-    done
-    
-    log_success "System services optimized"
-}
 
 create_maintenance_scripts() {
     log_info "Creating system maintenance scripts..."
