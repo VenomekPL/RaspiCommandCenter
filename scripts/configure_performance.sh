@@ -79,14 +79,17 @@ dtparam=pciex1
 # Audio Configuration
 dtparam=audio=on
 
-# Performance Settings (Conservative for stability)
-# CPU frequency boost (reduced from aggressive 3GHz to stable 2.4GHz)
-arm_freq=2400
-arm_freq_min=1500
-gpu_freq=750
+# Performance Settings (Aggressive but Stable)
+# CPU frequency boost - 3GHz as requested
+arm_freq=3000
+arm_freq_min=1800
+gpu_freq=1000
 
-# Memory allocation for GPU (conservative 128MB)
-gpu_mem=128
+# Voltage support for 3GHz CPU (moderate, not extreme)
+over_voltage=2
+
+# Maximum memory allocation for GPU as requested (Pi 5 can handle more)
+gpu_mem=512
 
 # Enable hardware interfaces
 dtparam=spi=on
