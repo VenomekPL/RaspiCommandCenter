@@ -186,16 +186,16 @@ fi
         systemd-journal-remote \
         systemd-resolved
     
-    log_success "All required packages installed successfully"
+    echo "✓ All required packages installed successfully"
     
     # Configure NetworkManager as mentioned in the guide
-    log_info "Configuring NetworkManager..."
+    echo "→ Configuring NetworkManager..."
     if [[ -f "/etc/NetworkManager/NetworkManager.conf" ]]; then
         # Change managed=false to true as mentioned in the guide
         sed -i 's/managed=false/managed=true/g' /etc/NetworkManager/NetworkManager.conf
-        log_info "NetworkManager configured (managed=true)"
+        echo "✓ NetworkManager configured (managed=true)"
     else
-        log_warn "NetworkManager config not found - may not be needed"
+        echo "⚠ NetworkManager config not found - may not be needed"
     fi
 }
 
@@ -204,33 +204,33 @@ fi
 ###############################################################################
 
 install_docker() {
-    log_info "=== Step 2: Installing Docker ==="
+    echo " === Step 2: Installing Docker ==="
     
     # Check if Docker is already installed
     if command -v docker >/dev/null 2>&1; then
-        log_info "Docker is already installed"
+        echo " Docker is already installed"
         docker --version
         return 0
     fi
     
     # Install Docker using the EXACT command from Neil Turner's guide
-    log_info "Installing Docker using official installer..."
-    log_info "Running: curl -fsSL get.docker.com | sh"
+    echo " Installing Docker using official installer..."
+    echo " Running: curl -fsSL get.docker.com | sh"
     
     curl -fsSL get.docker.com | sh
     
     # Verify Docker installation
     if command -v docker >/dev/null 2>&1; then
-        log_success "Docker installed successfully"
+        echo " Docker installed successfully"
         docker --version
         
         # Add user to docker group
         if [[ -n "${SUDO_USER:-}" ]]; then
             usermod -aG docker "$SUDO_USER"
-            log_info "Added $SUDO_USER to docker group"
+            echo " Added $SUDO_USER to docker group"
         fi
     else
-        log_error "Docker installation failed"
+        echo " Docker installation failed"
         exit 1
     fi
 }
@@ -240,25 +240,25 @@ install_docker() {
 ###############################################################################
 
 install_os_agent() {
-    log_info "=== Step 3: Installing Home Assistant OS Agent ==="
+    echo " === Step 3: Installing Home Assistant OS Agent ==="
     
     # Get the latest OS Agent version for aarch64 (Raspberry Pi)
     local agent_url="https://github.com/home-assistant/os-agent/releases/latest/download/os-agent_1.6.0_linux_aarch64.deb"
     local agent_file="/tmp/os-agent_1.6.0_linux_aarch64.deb"
     
-    log_info "Downloading OS Agent..."
+    echo " Downloading OS Agent..."
     wget -O "$agent_file" "$agent_url"
     
-    log_info "Installing OS Agent..."
+    echo " Installing OS Agent..."
     dpkg -i "$agent_file"
     
     # Verify installation using the EXACT command from Neil Turner's guide
-    log_info "Verifying OS Agent installation..."
+    echo " Verifying OS Agent installation..."
     if gdbus introspect --system --dest io.hass.os --object-path /io/hass/os >/dev/null 2>&1; then
-        log_success "OS Agent installed and verified successfully"
+        echo " OS Agent installed and verified successfully"
     else
-        log_error "OS Agent verification failed"
-        log_error "If you get 'gdbus command not found', you may have missed libglib2.0-bin package"
+        echo " OS Agent verification failed"
+        echo " If you get 'gdbus command not found', you may have missed libglib2.0-bin package"
         exit 1
     fi
     
@@ -271,18 +271,18 @@ install_os_agent() {
 ###############################################################################
 
 install_homeassistant_supervised() {
-    log_info "=== Step 4: Installing Home Assistant Supervised ==="
+    echo " === Step 4: Installing Home Assistant Supervised ==="
     
     # Download Home Assistant Supervised using EXACT commands from guide
-    log_info "Downloading Home Assistant Supervised installer..."
+    echo " Downloading Home Assistant Supervised installer..."
     
     wget -O homeassistant-supervised.deb \
         https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
     
-    log_info "Installing Home Assistant Supervised..."
+    echo " Installing Home Assistant Supervised..."
     apt install ./homeassistant-supervised.deb
     
-    log_success "Home Assistant Supervised installation completed"
+    echo " Home Assistant Supervised installation completed"
     
     # Clean up
     rm -f homeassistant-supervised.deb
@@ -293,11 +293,11 @@ install_homeassistant_supervised() {
 ###############################################################################
 
 verify_installation() {
-    log_info "=== Step 5: Verifying Home Assistant installation ==="
+    echo " === Step 5: Verifying Home Assistant installation ==="
     
     local ip_address=$(hostname -I | awk '{print $1}')
-    log_info "Waiting for Home Assistant to start..."
-    log_info "This may take a few minutes as containers are downloaded and started..."
+    echo " Waiting for Home Assistant to start..."
+    echo " This may take a few minutes as containers are downloaded and started..."
     
     # Wait up to 10 minutes for Home Assistant to be ready
     local max_attempts=20
@@ -305,7 +305,7 @@ verify_installation() {
     
     while [[ $attempt -lt $max_attempts ]]; do
         if curl -f "http://${ip_address}:8123" >/dev/null 2>&1; then
-            log_success "Home Assistant is accessible!"
+            echo " Home Assistant is accessible!"
             echo ""
             echo "=================================================================="
             echo "  🎉 HOME ASSISTANT SUPERVISED SUCCESSFULLY INSTALLED!"
@@ -321,13 +321,13 @@ verify_installation() {
         fi
         
         ((attempt++))
-        log_info "Attempt $attempt/$max_attempts - Still waiting for Home Assistant to start..."
+        echo " Attempt $attempt/$max_attempts - Still waiting for Home Assistant to start..."
         sleep 30
     done
     
-    log_warn "Home Assistant did not respond within 10 minutes"
-    log_info "This doesn't necessarily mean installation failed - containers may still be starting"
-    log_info "Try accessing http://${ip_address}:8123 in a few more minutes"
+    echo " Home Assistant did not respond within 10 minutes"
+    echo " This doesn't necessarily mean installation failed - containers may still be starting"
+    echo " Try accessing http://${ip_address}:8123 in a few more minutes"
 }
 
 ###############################################################################
@@ -353,13 +353,13 @@ main() {
     
     # Check if running as root
     if [[ $EUID -ne 0 ]]; then
-        log_error "This script must be run as root (use sudo)"
+        echo " This script must be run as root (use sudo)"
         exit 1
     fi
     
     # Check if running on Raspberry Pi
     if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
-        log_warn "This script is optimized for Raspberry Pi"
+        echo " This script is optimized for Raspberry Pi"
         echo "Continue anyway? (y/N)"
         read -r response
         if [[ ! "$response" =~ ^[Yy]$ ]]; then
