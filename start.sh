@@ -1,83 +1,132 @@
 #!/bin/bash
 
-###############################################################################
-# Raspberry Pi 5 Setup Script - Main Entry Point
-# 
-# This script orchestrates the modular setup of a Raspberry Pi 5
-# with NVME SSD, solid cooling, and all required components
-#
-# Author: RaspiCommandCenter
-# Version: 2.0.0
-###############################################################################
-
-set -euo pipefail  # Exit on error, undefined vars, pipe failures
+set -euo pipefail
 
 # Script directory and paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
 UTILS_DIR="${SCRIPT_DIR}/utils"
-LOGS_DIR="${SCRIPT_DIR}/logs"
 
 # Configuration
 readonly PROGRAM_NAME="RaspiCommandCenter"
 readonly VERSION="2.1.0-STABLE"
-readonly LOG_FILE="${LOGS_DIR}/start_$(date +%Y%m%d_%H%M%S).log"
 
 # Source utility functions
-source "${UTILS_DIR}/logging.sh"
 source "${UTILS_DIR}/common.sh"
-
-###############################################################################
-# Banner and Information
-###############################################################################
 
 show_banner() {
     echo "=================================================================="
-    echo "  RaspiCommandCenter v${VERSION} - FULLY AUTOMATED"
-    echo "  Complete Raspberry Pi 5 Entertainment Center Setup"
+    echo "  RaspiCommandCenter v${VERSION}"
+    echo "  Raspberry Pi 5 Setup"
     echo "=================================================================="
-    echo ""
-    echo "🤖 FULL AUTOMATION: One command installs everything!"
-    echo ""
-    echo "⚠️  SAFETY FIRST - This script is designed for stability:"
-    echo "• NO dangerous apt upgrade commands"
-    echo "• NO risky firmware updates"
-    echo "• NO EEPROM modifications that can brick your device"
-    echo "• Conservative overclocking for reliability"
-    echo ""
-    echo "✅ Your system will remain stable and functional!"
-    echo ""
 }
-
-show_system_info() {
-    log_info "System Information:"
-    echo "  Date: $(date)"
-    echo "  System: $(cat /proc/device-tree/model | tr -d '\0' 2>/dev/null || echo 'Unknown')"
-    echo "  Kernel: $(uname -r)"
-    echo "  User: $(whoami)"
-    echo "  Architecture: $(uname -m)"
-    
-    # Memory info
-    local mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    local mem_gb=$(( mem_total / 1024 / 1024 ))
-    echo "  Memory: ${mem_gb}GB"
-    
-    # Storage info
-    local storage=$(df -h / | awk 'NR==2 {print $2}')
-    echo "  Root Storage: $storage"
-    
-    echo ""
-}
-
-###############################################################################
-# Prerequisites and Validation
-###############################################################################
 
 check_prerequisites() {
-    log_info "Checking prerequisites..."
+    echo "Checking prerequisites..."
     
-    # Check if running as root
     if [[ $EUID -ne 0 ]]; then
+        echo "ERROR: This script must be run as root (use sudo)"
+        exit 1
+    fi
+    
+    if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
+        echo "WARNING: Not running on Raspberry Pi"
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
+    
+    echo "✓ Prerequisites checked"
+}
+
+run_dependencies_installation() {
+    echo "=== Phase 1: Installing Dependencies ==="
+    if [[ -x "${SCRIPTS_DIR}/install_dependencies.sh" ]]; then
+        "${SCRIPTS_DIR}/install_dependencies.sh"
+        echo "✓ Dependencies installed"
+    else
+        echo "ERROR: install_dependencies.sh not found or not executable"
+        exit 1
+    fi
+}
+
+run_performance_configuration() {
+    echo "=== Phase 1: Configuring Performance ==="
+    if [[ -x "${SCRIPTS_DIR}/configure_performance.sh" ]]; then
+        "${SCRIPTS_DIR}/configure_performance.sh"
+        echo "✓ Performance configured"
+    else
+        echo "ERROR: configure_performance.sh not found or not executable"
+        exit 1
+    fi
+}
+
+run_services_configuration() {
+    echo "=== Phase 1: Configuring Services ==="
+    if [[ -x "${SCRIPTS_DIR}/configure_services.sh" ]]; then
+        "${SCRIPTS_DIR}/configure_services.sh"
+        echo "✓ Services configured"
+    else
+        echo "ERROR: configure_services.sh not found or not executable"
+        exit 1
+    fi
+}
+
+main() {
+    show_banner
+    check_prerequisites
+    
+    echo ""
+    echo "This will install:"
+    echo "• System dependencies"
+    echo "• Docker"
+    echo "• Home Assistant Supervised"
+    echo "• EmulationStation"
+    echo ""
+    
+    echo "Starting installation..."
+    echo ""
+    
+    # Phase 1: System Foundation
+    run_dependencies_installation
+    run_performance_configuration
+    run_services_configuration
+    
+    # Phase 2: Applications
+    echo "=== Phase 2: Installing Applications ==="
+    if [[ -x "${SCRIPTS_DIR}/phase2.sh" ]]; then
+        "${SCRIPTS_DIR}/phase2.sh"
+        echo "✓ Applications installed"
+    else
+        echo "ERROR: phase2.sh not found"
+        exit 1
+    fi
+    
+    echo ""
+    echo "=================================================================="
+    echo "  Setup Complete!"
+    echo "=================================================================="
+    echo "✓ System configured"
+    echo "✓ Applications installed"
+    echo ""
+    echo "Access points:"
+    echo "• Home Assistant: http://$(hostname -I | awk '{print $1}'):8123"
+    echo ""
+    
+    read -p "Reboot now? (Y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        echo "Rebooting in 5 seconds..."
+        sleep 5
+        reboot
+    else
+        echo "Manual reboot required to complete setup"
+    fi
+}
+
+main "$@"
         log_error "This script must be run as root (use sudo)"
         exit 1
     fi
@@ -336,29 +385,48 @@ main() {
     echo "  🎉 COMPLETE AUTOMATED SETUP FINISHED!"
     echo "=================================================================="
     echo "✅ Phase 1: System foundation configured"
-    echo "✅ Phase 2: Applications installed"
-    echo "✅ Home Assistant Supervised ready"
-    echo "✅ EmulationStation gaming platform ready"
+    echo "✅ Phase 2: All applications installed"
     echo ""
-    echo "🔄 FINAL STEP: System reboot required"
-    echo "Hardware optimizations need a reboot to take effect."
+    echo "🏠 Home Assistant Supervised: http://$(hostname -I | awk '{print $1}'):8123"
+    echo "🎮 EmulationStation: Auto-starts on boot (console mode)"
+    echo "📺 Kodi Media Center: Integrated with EmulationStation"
+    echo "📁 NAS File Server: \\\\$(hostname -I | awk '{print $1}') (Videos, Music, ROMs, etc.)"
+    echo ""
+    echo "🔄 FINAL STEP: REBOOT REQUIRED"
+    echo ""
+    echo "After reboot:"
+    echo "• System boots to console (no desktop)"  
+    echo "• EmulationStation starts automatically"
+    echo "• Access all services via network"
+    echo "• Upload ROMs via network shares"
     echo ""
     
     # Auto-reboot prompt
-    read -p "Reboot now to complete setup? (Y/n): " -n 1 -r
+    read -p "🚀 REBOOT NOW to start using your complete system? (Y/n): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        log_info "Rebooting system to activate all optimizations..."
         echo ""
         echo "🔄 Rebooting in 5 seconds... (Ctrl+C to cancel)"
+        echo ""
+        echo "After reboot, your Pi will be a complete:"
+        echo "• 🎮 Gaming Console (EmulationStation auto-starts)"
+        echo "• 🏠 Smart Home Hub (Home Assistant)"
+        echo "• � Media Center (Kodi integrated)"
+        echo "• 📁 Network Storage (NAS file sharing)"
+        echo ""
+        echo "Enjoy your all-in-one Raspberry Pi system! 🎯"
         sleep 5
         reboot
     else
         echo ""
         echo "⚠️  MANUAL REBOOT REQUIRED:"
-        echo "Run 'sudo reboot' when ready to activate all optimizations"
+        echo "Run 'sudo reboot' to activate:"
+        echo "• Console boot mode"
+        echo "• EmulationStation autostart" 
+        echo "• All system optimizations"
+        echo "• Complete integrated experience"
         echo ""
-        log_success "Complete setup finished! Reboot manually when convenient."
+        echo "🎯 Your Pi will be ready as a complete entertainment system!"
     fi
 }
 

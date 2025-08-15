@@ -1,96 +1,213 @@
-# RaspiCommandCenter - Complete Smart Home & Media System
+# RaspiCommandCenter v2.0.0
 
-Transform your Raspberry Pi 5 with NVME SSD into a complete smart home and retro gaming media center with automatic EmulationStation boot.
+## Complete All-in-One Raspberry Pi Entertainment System
 
-## 🎯 What This Creates
+Transform your Raspberry Pi 5 into a complete entertainment and automation hub with **one command**. After reboot, your Pi boots directly to a gaming console while running smart home and media services in the background.
 
-- **Smart Home Hub**: Home Assistant Supervised with full add-on support
-- **Retro Gaming Station**: EmulationStation with all major console emulators (auto-starts on boot)
-- **Media Center**: Kodi with Elementum torrent streaming and automatic library setup
-- **NAS File Server**: Samba + Webmin for complete home directory sharing
-- **Command Line Boot**: Optimized resource usage with desktop-free operation
-- **High Performance**: Optimized for NVME SSD and proper cooling
+## System Components
 
-## 🌐 Web Services (Access from any device)
+### Gaming Console
+- EmulationStation with 20+ retro gaming systems
+- Automatic boot to gaming interface (no desktop)
+- Controller auto-detection and configuration
+- Comprehensive ROM directory structure
 
-Once installed, access these services from any device on your network:
+### Smart Home Hub
+- Home Assistant Supervised with full Docker support
+- Complete add-on ecosystem available
+- Web-based automation and device control
 
-- **Home Assistant**: `http://[PI-IP]:8123` - Smart home control and automation
-- **Kodi Web Interface**: `http://[PI-IP]:8080` - Remote media center control
-- **Webmin (NAS Management)**: `http://[PI-IP]:10000` - File server web management
+### Media Center
+- Kodi integrated with EmulationStation
+- Elementum plugin for torrent streaming
+- Automatic media library configuration
 
-**Find your Pi's IP address**: `hostname -I` or check your router's device list
+### Network File Server
+- Open local network access (no passwords needed)
+- All media folders shared: Videos, Music, Pictures, ROMs, Downloads
+- Easy remote ROM management and media uploads
 
-## 🛠️ Requirements
+## Network Access
+
+Access all services from any device on your local network:
+
+- **Gaming**: Direct console access (auto-boots EmulationStation)
+- **Home Assistant**: `http://[PI-IP]:8123`
+- **Kodi Web Control**: `http://[PI-IP]:8080`
+- **File Shares**: `\\[PI-IP]` (Windows) or `smb://[PI-IP]` (Mac/Linux)
+
+Find your Pi's IP: `hostname -I` or check your router
+
+## Quick Start
+
+**Complete setup in one command:**
+
+```bash
+cd ~ && git clone https://github.com/VenomekPL/RaspiCommandCenter.git && cd RaspiCommandCenter && chmod +x *.sh scripts/*.sh && sudo ./start.sh
+```
+
+**What happens:**
+
+1. Installs all system dependencies
+2. Configures console boot (no desktop GUI)
+3. Sets up EmulationStation autostart
+4. Installs Home Assistant Supervised
+5. Configures Kodi media center
+6. Sets up network file sharing
+7. Optimizes performance settings
+8. **Prompts for reboot to activate everything**
+
+## Requirements
 
 - Raspberry Pi 5 (4GB or 8GB recommended)
-- NVME SSD HAT (M.2 HAT+ or compatible)
-- Proper cooling solution (Pironman case or equivalent)
 - Fresh Raspberry Pi OS (64-bit) installation
 - Internet connection
+- MicroSD card (32GB+ recommended)
+- Optional: NVME SSD for better performance
 
-## 🚀 Quick Start (Copy & Paste)
+## After Installation
 
-**Single command installation:**
+### First Boot Experience
 
-```bash
-cd ~ && git clone --depth=1 https://github.com/VenomekPL/RaspiCommandCenter.git && cd RaspiCommandCenter && chmod +x *.sh scripts/*.sh && sudo ./start.sh
+1. **Boot**: Pi starts in console mode
+2. **Login**: EmulationStation launches automatically
+3. **Gaming**: Full retro gaming library ready
+4. **Media**: Access Kodi from EmulationStation → Ports
+5. **Smart Home**: Configure Home Assistant via web browser
+6. **File Management**: Upload ROMs/media from any computer
+
+### Adding ROMs
+
+Upload ROM files to your Pi from any computer:
+
+**Windows**: Open `\\[PI-IP]\ROMs` in File Explorer
+**Mac**: Open `smb://[PI-IP]/ROMs` in Finder  
+**Linux**: Open `smb://[PI-IP]/ROMs` in file manager
+
+### Supported Gaming Systems
+
+- Nintendo: NES, SNES, N64, GameCube, Wii, Game Boy, GBA, DS
+- Sony: PlayStation 1, 2, PSP
+- Sega: Master System, Genesis, Game Gear, Dreamcast
+- Atari: 2600, 7800, Lynx
+- Arcade: MAME, FinalBurn Neo
+- And many more!
+
+## System Architecture
+
+### Automated Pipeline
+```
+start.sh → Phase 1 (System) → Phase 2 (Applications) → Reboot
 ```
 
-**Or step-by-step:**
+### Phase 1: System Foundation
+- `install_dependencies.sh`: Essential packages and Docker
+- `configure_performance.sh`: Hardware optimization
+- `configure_services.sh`: Console boot and EmulationStation autostart
+
+### Phase 2: Applications
+- `setup_homeassistant_supervised.sh`: Smart home platform
+- `setup_emulationstation.sh`: Gaming system installation
+- `configure_emulationstation.sh`: Complete gaming configuration
+- `setup_kodi.sh`: Media center integration
+- `setup_nas_fileserver.sh`: Network file sharing
+
+## Advanced Usage
+
+### Manual Script Execution
+
+If you prefer granular control:
 
 ```bash
-# Go to home directory
-cd ~
-
-# Clone the repository
-git clone --depth=1 https://github.com/VenomekPL/RaspiCommandCenter.git
-
-# Enter the directory
-cd RaspiCommandCenter
-
-# Make all scripts executable
-chmod +x *.sh scripts/*.sh
-
-# Run Phase 1 setup (requires reboot)
-sudo ./start.sh
-```
-
-### Phase 1: System Preparation
-
-```bash
-sudo ./start.sh
-```
-
-🤖 **FULLY AUTOMATED**: This now runs everything automatically!
-- System updates and essential packages
-- NVME SSD configuration and boot optimization  
-- Hardware acceleration setup (4K video support)
-- Performance tuning and cooling integration
-- Home Assistant Supervised installation
-- EmulationStation with all retro gaming emulators
-- **Automatic reboot when complete**
-
-### Manual Execution (Advanced Users)
-
-If you prefer granular control over each step:
-
-```bash
-# Phase 1: System Foundation
+# System foundation
 sudo ./scripts/install_dependencies.sh
-sudo ./scripts/configure_performance.sh
+sudo ./scripts/configure_performance.sh  
 sudo ./scripts/configure_services.sh
 
 # Reboot required
 sudo reboot
 
-# Phase 2: Applications
+# Applications
 ./scripts/phase2.sh
 ```
 
-## 🎮 What You Get
+### Individual Components
 
-### Smart Home Control
+Run specific components:
+
+```bash
+# Home Assistant only
+sudo ./scripts/setup_homeassistant_supervised.sh
+
+# Gaming setup only
+sudo ./scripts/setup_emulationstation.sh
+
+# NAS server only
+sudo ./scripts/setup_nas_fileserver.sh
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**EmulationStation doesn't start**: Check if console boot is configured
+```bash
+sudo systemctl get-default  # Should show: multi-user.target
+```
+
+**Can't access network shares**: Verify Samba is running
+```bash
+sudo systemctl status smbd
+```
+
+**Home Assistant not accessible**: Check Docker status
+```bash
+sudo docker ps
+```
+
+### Support
+
+- Check logs: `~/logs/`
+- View system status: `systemctl status`
+- Test network connectivity: `ping [PI-IP]`
+
+## Performance Optimization
+
+### Hardware Recommendations
+
+- **Cooling**: Active cooling recommended for sustained performance
+- **Storage**: NVME SSD significantly improves loading times
+- **Power**: Use official Pi 5 power adapter (5V/5A)
+- **Network**: Wired Ethernet for best streaming performance
+
+### Monitoring
+
+Access system monitoring:
+- **htop**: `htop` (CPU/Memory usage)
+- **iotop**: `sudo iotop` (Disk I/O)
+- **Network**: Home Assistant System tab
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Test on fresh Pi installation
+4. Submit pull request
+
+## Changelog
+
+### v2.0.0
+- Complete system rewrite
+- One-command installation
+- Console boot with EmulationStation autostart
+- Integrated NAS file server
+- Network-based ROM management
+- Clean, focused scripts (no logging spam)
+- Full pipeline automation
 
 - **Home Assistant Supervised**: Full smart home platform with add-ons
 - **Web Interface**: Access at `http://[PI-IP]:8123`
