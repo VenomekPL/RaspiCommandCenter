@@ -38,12 +38,12 @@ avahi-daemon
 apparmor
 udisks2
 libglib2.0-bin
-network-manager
+# network-manager  # REMOVED: Already installed, reinstalling can break connectivity
 dbus
 
 # Hardware and GPIO Tools (essential for Pi setup)
 raspi-config
-rpi-eeprom
+# rpi-eeprom  # REMOVED: Can trigger unwanted kernel updates
 i2c-tools
 
 # Storage Tools (essential for NVME setup)

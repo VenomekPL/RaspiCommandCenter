@@ -24,17 +24,18 @@ install_required_packages() {
         ca-certificates \
         cifs-utils \
         dbus \
-        network-manager \
         systemd-journal-remote \
         systemd-resolved
     
     echo "✓ Required packages installed"
     
     # Configure NetworkManager
-    if [[ -f "/etc/NetworkManager/NetworkManager.conf" ]]; then
-        sed -i 's/managed=false/managed=true/g' /etc/NetworkManager/NetworkManager.conf
-        echo "✓ NetworkManager configured"
-    fi
+    # DISABLED: This breaks internet connectivity
+    # if [[ -f "/etc/NetworkManager/NetworkManager.conf" ]]; then
+    #     sed -i 's/managed=false/managed=true/g' /etc/NetworkManager/NetworkManager.conf
+    #     echo "✓ NetworkManager configured"
+    # fi
+    echo "⚠ NetworkManager config SKIPPED to preserve internet connectivity"
 }
 
 install_docker() {
@@ -188,15 +189,17 @@ fi
     
     echo "✓ All required packages installed successfully"
     
-    # Configure NetworkManager as mentioned in the guide
+    # Configure NetworkManager as mentioned in the guide - DISABLED
     echo "→ Configuring NetworkManager..."
-    if [[ -f "/etc/NetworkManager/NetworkManager.conf" ]]; then
-        # Change managed=false to true as mentioned in the guide
-        sed -i 's/managed=false/managed=true/g' /etc/NetworkManager/NetworkManager.conf
-        echo "✓ NetworkManager configured (managed=true)"
-    else
-        echo "⚠ NetworkManager config not found - may not be needed"
-    fi
+    # CRITICAL: Do NOT change NetworkManager settings - it breaks internet!
+    # if [[ -f "/etc/NetworkManager/NetworkManager.conf" ]]; then
+    #     # Change managed=false to true as mentioned in the guide
+    #     sed -i 's/managed=false/managed=true/g' /etc/NetworkManager/NetworkManager.conf
+    #     echo "✓ NetworkManager configured (managed=true)"
+    # else
+    #     echo "⚠ NetworkManager config not found - may not be needed"
+    # fi
+    echo "⚠ NetworkManager config changes DISABLED to preserve internet connectivity"
 }
 
 ###############################################################################
