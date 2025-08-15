@@ -3,11 +3,13 @@
 ###############################################################################
 # Home Assistant Supervised Installation Script
 # 
-# Based on the official guide from https://peyanski.com/how-to-install-home-assistant-supervised-official-way/
-# This script installs Home Assistant Supervised with all dependencies
+# Following the proven approach from Neil Turner's guide:
+# https://neilturner.me.uk/2024/01/10/how-to-install-home-assistant-supervised-on-a-raspberry-pi/
+# 
+# This script installs Home Assistant Supervised with Docker exactly as documented
 #
 # Author: RaspiCommandCenter
-# Version: 1.0.0
+# Version: 1.1.0
 ###############################################################################
 
 set -euo pipefail
@@ -92,7 +94,7 @@ install_dependencies() {
     log_info "Updating package lists..."
     apt-get update -qq
     
-    # Install all required dependencies
+    # Install ONLY what's actually needed according to the official guide
     log_info "Installing required packages..."
     apt-get install -y \
         jq \
@@ -101,8 +103,14 @@ install_dependencies() {
         avahi-daemon \
         udisks2 \
         libglib2.0-bin \
-        # network-manager \  # REMOVED - causes network conflicts
-        apparmor
+        apparmor \
+        apparmor-utils \
+        ca-certificates \
+        cifs-utils \
+        dbus \
+        network-manager \
+        systemd-journal-remote \
+        systemd-resolved
     
     log_success "Dependencies installed successfully"
 }
@@ -205,16 +213,13 @@ install_os_agent() {
     log_info "Installing OS Agent..."
     dpkg -i "$agent_file"
     
-    # Optional verification (doesn't require dbus)
+    # Verify installation (as per the Neil Turner guide)
     log_info "Verifying OS Agent installation..."
-    if command -v gdbus >/dev/null 2>&1; then
-        if gdbus introspect --system --dest io.hass.os --object-path /io/hass/os >/dev/null 2>&1; then
-            log_success "OS Agent installed and verified successfully"
-        else
-            log_warn "OS Agent installed but verification failed (this is usually OK)"
-        fi
+    if gdbus introspect --system --dest io.hass.os --object-path /io/hass/os >/dev/null 2>&1; then
+        log_success "OS Agent installed and verified successfully"
     else
-        log_info "OS Agent installed (skipping verification - gdbus not available)"
+        log_warn "OS Agent verification failed - if gdbus command not found, install libglib2.0-bin"
+        log_info "Continuing anyway - Home Assistant may still work"
     fi
     
     # Clean up

@@ -269,16 +269,21 @@ install_home_assistant_dependencies() {
     log_info "Installing Home Assistant dependencies..."
     
     local ha_packages=(
-        # Core dependencies for Home Assistant Supervised
+        # Core dependencies for Home Assistant Supervised (from official guide)
         "jq"
-        "wget"
+        "wget" 
         "curl"
         "avahi-daemon"
-        # "network-manager"  # REMOVED - causes network conflicts
-        "apparmor"
-        "apparmor-utils"
         "udisks2"
         "libglib2.0-bin"
+        "apparmor"
+        "apparmor-utils"
+        "ca-certificates"
+        "cifs-utils"
+        "dbus"
+        "network-manager"
+        "systemd-journal-remote"
+        "systemd-resolved"
         
         # Additional useful packages
         "systemd-journal-remote"
