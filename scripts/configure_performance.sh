@@ -70,8 +70,8 @@ configure_boot_settings() {
 # Reference: https://www.jeffgeerling.com/blog/2023/nvme-ssd-boot-raspberry-pi-5
 
 # NVME/PCIe Configuration (Jeff Geerling method)
-# Enable PCIe x1 slot for NVME SSDs
-dtparam=pciex1
+# Enable NVME SSD support (alias for dtparam=pciex1)
+dtparam=nvme
 
 # Optional: Control PCIe lane speed (uncomment if needed)
 # dtparam=pciex1_gen=3
