@@ -9,12 +9,12 @@ source "${SCRIPT_DIR}/../utils/common.sh"
 main() {
     echo "=== Phase 2: Installing Applications ==="
     
-    echo "Installing Home Assistant Supervised..."
-    if [ -x "${SCRIPT_DIR}/setup_homeassistant_supervised.sh" ]; then
-        "${SCRIPT_DIR}/setup_homeassistant_supervised.sh"
-        echo "✓ Home Assistant Supervised installed"
+    echo "Installing Home Assistant (Docker)..."
+    if [ -x "${SCRIPT_DIR}/setup_homeassistant_docker.sh" ]; then
+        "${SCRIPT_DIR}/setup_homeassistant_docker.sh"
+        echo "✓ Home Assistant (Docker) installed"
     else
-        echo "ERROR: Home Assistant Supervised setup script not found"
+        echo "ERROR: Home Assistant Docker setup script not found"
         exit 1
     fi
     
