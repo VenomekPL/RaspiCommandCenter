@@ -64,12 +64,28 @@ setup_retropie() {
     
     # Clone or update RetroPie
     if [ -d "$RETROPIE_DIR" ]; then
-        echo "Updating existing RetroPie installation..."
+        echo "Checking existing RetroPie installation..."
         cd "$RETROPIE_DIR"
+        
+        # Check if it's a valid git repository
         if [[ $EUID -eq 0 ]] && [[ -n "$REAL_USER" ]]; then
-            sudo -u "$REAL_USER" git pull
+            if sudo -u "$REAL_USER" git status >/dev/null 2>&1; then
+                echo "Updating existing RetroPie installation..."
+                sudo -u "$REAL_USER" git pull
+            else
+                echo "Existing directory is not a valid git repo, removing and re-cloning..."
+                rm -rf "$RETROPIE_DIR"
+                sudo -u "$REAL_USER" git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git "$RETROPIE_DIR"
+            fi
         else
-            git pull
+            if git status >/dev/null 2>&1; then
+                echo "Updating existing RetroPie installation..."
+                git pull
+            else
+                echo "Existing directory is not a valid git repo, removing and re-cloning..."
+                rm -rf "$RETROPIE_DIR"
+                git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git "$RETROPIE_DIR"
+            fi
         fi
     else
         echo "Cloning RetroPie setup repository..."
@@ -83,6 +99,12 @@ setup_retropie() {
     # Set proper ownership
     if [[ -n "$REAL_USER" ]]; then
         chown -R "$REAL_USER:$REAL_USER" "$RETROPIE_DIR"
+    fi
+    
+    # Verify the installation
+    if [ ! -f "$RETROPIE_DIR/retropie_setup.sh" ]; then
+        echo "ERROR: RetroPie setup script not found at $RETROPIE_DIR/retropie_setup.sh"
+        return 1
     fi
     
     echo "✓ RetroPie repository ready at $RETROPIE_DIR"
