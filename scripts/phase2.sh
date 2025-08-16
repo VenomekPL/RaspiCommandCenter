@@ -19,10 +19,16 @@ main() {
     fi
     
     echo ""
-    echo "Installing EmulationStation..."
+    echo "Installing EmulationStation (as user)..."
     if [ -x "${SCRIPT_DIR}/setup_emulationstation.sh" ]; then
-        "${SCRIPT_DIR}/setup_emulationstation.sh"
-        echo "✓ EmulationStation installed"
+        # Run as the original user, not root
+        if [[ -n "${SUDO_USER:-}" ]]; then
+            sudo -u "$SUDO_USER" "${SCRIPT_DIR}/setup_emulationstation.sh"
+            echo "✓ EmulationStation installed"
+        else
+            echo "ERROR: No SUDO_USER found - cannot run EmulationStation setup as non-root user"
+            exit 1
+        fi
     else
         echo "ERROR: EmulationStation setup script not found"
         exit 1

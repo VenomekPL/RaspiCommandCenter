@@ -7,8 +7,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../utils/common.sh"
 
 # Configuration
-RETROPIE_DIR="$HOME/RetroPie-Setup"
-RETROPIE_ROMS_DIR="$HOME/ROMs"
+USER_HOME="${SUDO_HOME:-$HOME}"
+if [[ -n "${SUDO_USER:-}" ]]; then
+    USER_HOME="/home/${SUDO_USER}"
+fi
+RETROPIE_DIR="${USER_HOME}/RetroPie-Setup"
+RETROPIE_ROMS_DIR="${USER_HOME}/ROMs"
 
 check_hardware() {
     echo "Checking hardware compatibility..."
@@ -54,9 +58,12 @@ install_retropie_core() {
     echo "Installing RetroPie core packages..."
     cd "$RETROPIE_DIR"
     
-    # Install basic RetroPie packages automatically
-    echo "Installing EmulationStation and core components..."
-    sudo ./retropie_setup.sh
+    # Install basic RetroPie packages non-interactively
+    echo "Installing EmulationStation and essential emulators..."
+    
+    # Use automated basic installation
+    # This installs EmulationStation and basic emulators
+    sudo __nodialog=1 ./retropie_setup.sh basic_install
     
     echo "✓ RetroPie core installation completed"
 }
@@ -89,10 +96,10 @@ optimize_performance() {
     # (This complements the boot config from phase 1)
     
     # Create EmulationStation config directory
-    mkdir -p "$HOME/.emulationstation"
+    mkdir -p "${USER_HOME}/.emulationstation"
     
     # Basic EmulationStation settings for performance
-    cat > "$HOME/.emulationstation/es_settings.cfg" << 'EOF'
+    cat > "${USER_HOME}/.emulationstation/es_settings.cfg" << 'EOF'
 <?xml version="1.0"?>
 <int name="ScreenSaverTime" value="300000" />
 <bool name="DrawFramerate" value="false" />
