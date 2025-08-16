@@ -6,13 +6,30 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../utils/common.sh"
 
-# Configuration
-USER_HOME="${SUDO_HOME:-$HOME}"
-if [[ -n "${SUDO_USER:-}" ]]; then
-    USER_HOME="/home/${SUDO_USER}"
-fi
-RETROPIE_DIR="${USER_HOME}/RetroPie-Setup"
-RETROPIE_ROMS_DIR="${USER_HOME}/ROMs"
+# Configuration - Detect the real user and their home directory
+detect_user_paths() {
+    if [[ $EUID -eq 0 ]]; then
+        # Running as root, get the original user
+        if [[ -n "${SUDO_USER:-}" ]]; then
+            REAL_USER="$SUDO_USER" 
+            USER_HOME="/home/$SUDO_USER"
+        else
+            echo "ERROR: Script is running as root but no SUDO_USER detected"
+            exit 1
+        fi
+    else
+        # Running as regular user
+        REAL_USER="$USER"
+        USER_HOME="$HOME"
+    fi
+    
+    RETROPIE_DIR="${USER_HOME}/RetroPie-Setup"
+    RETROPIE_ROMS_DIR="${USER_HOME}/ROMs"
+    
+    echo "Using paths for user: $REAL_USER"
+    echo "Home directory: $USER_HOME"
+    echo "RetroPie directory: $RETROPIE_DIR"
+}
 
 check_hardware() {
     echo "Checking hardware compatibility..."
@@ -34,24 +51,41 @@ check_hardware() {
 setup_retropie() {
     echo "Setting up RetroPie..."
     
-    if [ "$EUID" -eq 0 ]; then
-        echo "ERROR: Do not run as root"
-        exit 1
+    # Ensure we're working in the correct user's directory
+    echo "Working with RetroPie directory: $RETROPIE_DIR"
+    
+    # Create directory as the real user
+    if [[ $EUID -eq 0 ]] && [[ -n "$REAL_USER" ]]; then
+        sudo -u "$REAL_USER" mkdir -p "$USER_HOME"
+        sudo -u "$REAL_USER" mkdir -p "$(dirname "$RETROPIE_DIR")"
+    else
+        mkdir -p "$RETROPIE_DIR"
     fi
     
     # Clone or update RetroPie
     if [ -d "$RETROPIE_DIR" ]; then
         echo "Updating existing RetroPie installation..."
         cd "$RETROPIE_DIR"
-        git pull
+        if [[ $EUID -eq 0 ]] && [[ -n "$REAL_USER" ]]; then
+            sudo -u "$REAL_USER" git pull
+        else
+            git pull
+        fi
     else
         echo "Cloning RetroPie setup repository..."
-        git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git "$RETROPIE_DIR"
+        if [[ $EUID -eq 0 ]] && [[ -n "$REAL_USER" ]]; then
+            sudo -u "$REAL_USER" git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git "$RETROPIE_DIR"
+        else
+            git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git "$RETROPIE_DIR"
+        fi
     fi
     
-    cd "$RETROPIE_DIR"
-    sudo chown -R "$USER:$USER" "$RETROPIE_DIR"
-    echo "✓ RetroPie repository ready"
+    # Set proper ownership
+    if [[ -n "$REAL_USER" ]]; then
+        chown -R "$REAL_USER:$REAL_USER" "$RETROPIE_DIR"
+    fi
+    
+    echo "✓ RetroPie repository ready at $RETROPIE_DIR"
 }
 
 install_retropie_core() {
@@ -117,6 +151,10 @@ EOF
 
 main() {
     echo "=== EmulationStation Setup ==="
+    
+    # Detect correct user paths first
+    detect_user_paths
+    
     echo ""
     echo "This will install:"
     echo "• RetroPie/EmulationStation"
@@ -127,12 +165,8 @@ main() {
     echo "• Performance optimizations"
     echo ""
     
-    read -p "Continue? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled"
-        exit 0
-    fi
+    # Auto-proceed when called from main installation
+    echo "Starting EmulationStation installation..."
     
     # Basic setup
     check_hardware
